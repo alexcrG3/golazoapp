@@ -1,0 +1,169 @@
+@import "tailwindcss" source(none);
+@source "../src";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --radius-3xl: calc(var(--radius) + 12px);
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --color-pitch: var(--pitch);
+  --color-pitch-glow: var(--pitch-glow);
+  --color-gold: var(--gold);
+
+  --font-display: "Bebas Neue", "Impact", sans-serif;
+  --font-sans: "Inter Tight", "Inter", system-ui, sans-serif;
+}
+
+:root {
+  --radius: 0.5rem;
+
+  /* Stadium night palette */
+  --background: oklch(0.14 0.02 250);
+  --foreground: oklch(0.98 0.005 250);
+
+  --card: oklch(0.22 0.025 250 / 55%);
+  --card-foreground: oklch(0.98 0 0);
+
+  --popover: oklch(0.18 0.025 250);
+  --popover-foreground: oklch(0.98 0 0);
+
+  /* Neon emerald — Golazo green */
+  --primary: oklch(0.86 0.22 152);
+  --primary-foreground: oklch(0.15 0.03 160);
+
+  --secondary: oklch(0.28 0.03 250 / 60%);
+  --secondary-foreground: oklch(0.98 0 0);
+
+  --muted: oklch(0.26 0.02 250 / 50%);
+  --muted-foreground: oklch(0.72 0.02 250);
+
+  --accent: oklch(0.82 0.18 145);
+  --accent-foreground: oklch(0.15 0 0);
+
+  --destructive: oklch(0.62 0.24 22);
+  --destructive-foreground: oklch(0.98 0 0);
+
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 14%);
+  --ring: oklch(0.86 0.22 152);
+
+  --pitch: oklch(0.55 0.18 145);
+  --pitch-glow: oklch(0.88 0.25 150);
+  --gold: oklch(0.85 0.16 85);
+
+  --gradient-pitch: radial-gradient(120% 80% at 50% 0%, oklch(0.32 0.12 152 / 0.55), transparent 60%),
+                    linear-gradient(180deg, oklch(0.16 0.03 250), oklch(0.09 0.02 250));
+  --gradient-hero: linear-gradient(180deg, transparent 0%, oklch(0.09 0.02 250 / 0.6) 50%, oklch(0.09 0.02 250) 100%);
+  --gradient-gold: linear-gradient(135deg, oklch(0.9 0.18 85), oklch(0.72 0.18 60));
+  --gradient-neon: linear-gradient(135deg, oklch(0.88 0.25 150), oklch(0.7 0.2 175));
+
+  --shadow-glass: 0 20px 60px -20px rgba(0, 0, 0, 0.6), inset 0 1px 0 0 rgba(255, 255, 255, 0.06);
+  --shadow-neon: 0 0 40px -8px oklch(0.86 0.22 152 / 0.55), 0 10px 30px -10px oklch(0.86 0.22 152 / 0.35);
+  --shadow-card: 0 30px 80px -30px rgba(0, 0, 0, 0.8);
+}
+
+.dark {
+  /* Reuse — app is dark by default */
+  --background: oklch(0.14 0.02 250);
+  --foreground: oklch(0.98 0.005 250);
+}
+
+@layer base {
+  * { border-color: var(--color-border); }
+  html, body, #root { height: 100%; }
+  body {
+    background: var(--gradient-pitch);
+    background-attachment: fixed;
+    color: var(--color-foreground);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+  h1, h2, h3, .font-display { font-family: var(--font-display); letter-spacing: 0.01em; }
+}
+
+@utility glass {
+  background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02));
+  backdrop-filter: blur(24px) saturate(140%);
+  border: 1px solid rgba(255,255,255,0.08);
+  box-shadow: var(--shadow-glass);
+}
+
+@utility glass-strong {
+  background: linear-gradient(180deg, rgba(255,255,255,0.10), rgba(255,255,255,0.03));
+  backdrop-filter: blur(32px) saturate(160%);
+  border: 1px solid rgba(255,255,255,0.12);
+  box-shadow: var(--shadow-card);
+}
+
+@utility neon-glow {
+  box-shadow: var(--shadow-neon);
+}
+
+@utility text-gradient-neon {
+  background: var(--gradient-neon);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+@utility text-gradient-gold {
+  background: var(--gradient-gold);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+@utility pitch-lines {
+  background-image:
+    linear-gradient(180deg, rgba(255,255,255,0.04) 0%, transparent 100%),
+    repeating-linear-gradient(90deg, transparent 0 40px, rgba(255,255,255,0.025) 40px 80px);
+}
+
+/* Custom keyframes */
+@keyframes pulse-ring {
+  0% { box-shadow: 0 0 0 0 oklch(0.86 0.22 152 / 0.6); }
+  100% { box-shadow: 0 0 0 16px oklch(0.86 0.22 152 / 0); }
+}
+@keyframes float-up {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+@utility animate-pulse-ring { animation: pulse-ring 1.8s ease-out infinite; }
+@utility animate-float-up { animation: float-up 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+
+/* Hide scrollbar for horizontal scrollers */
+@utility no-scrollbar {
+  scrollbar-width: none;
+  &::-webkit-scrollbar { display: none; }
+}
