@@ -1,16 +1,5 @@
 {
+  "framework": "tanstack-start",
   "buildCommand": "npm run build",
-  "outputDirectory": "dist/client",
-  "framework": null,
-  "functions": {
-    "dist/server/server.js": {
-      "includeFiles": "dist/server/**"
-    }
-  },
-  "rewrites": [
-    {
-      "source": "/((?!assets/).*)",
-      "destination": "/dist/server/server.js"
-    }
-  ]
+  "outputDirectory": ".output"
 }
