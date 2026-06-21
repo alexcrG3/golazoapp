@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { ChevronRight, Trophy, Zap, Calendar, Menu } from "lucide-react";
+import { ChevronRight, Trophy, Zap, Calendar, Menu, User } from "lucide-react";
 import stadiumHero from "@/assets/stadium-hero.jpg";
 import { useQuery } from "@tanstack/react-query";
 import { AppShell } from "@/components/AppShell";
@@ -9,10 +9,11 @@ import { MatchCard } from "@/components/MatchCard";
 import { matches, nextMatch, upcomingMatches, userProfile, teamByCode } from "@/data";
 import { TimeFormatToggle, formatDay, formatTime, useTimeFormat, isSameDay } from "@/contexts/TimeFormat";
 import { fetchRealGroupsAndMatches } from "@/lib/api-football";
-import { useChampion, calculateUserStats } from "@/lib/predictionsStore";
+import { useChampion, calculateUserStats, usePrediction } from "@/lib/predictionsStore";
 import { getDynamicLeaderboard, getSupabaseLeaderboard } from "@/data/leaderboard";
 import { useAuth } from "@/hooks/useAuth";
 import { useSidebar } from "@/contexts/SidebarContext";
+import { ProfileDropdown } from "@/components/ProfileDropdown";
 
 
 
@@ -56,7 +57,7 @@ function HomePage() {
   const { open: openSidebar } = useSidebar();
 
   const matchesList = apiData?.matches || matches;
-  const stats = calculateUserStats(matchesList);
+  const stats = calculateUserStats(matchesList, profile?.country_code);
 
   const { data: leaderboardList = [] } = useQuery({
     queryKey: ["supabaseLeaderboard", matchesList, user?.id],
@@ -71,7 +72,8 @@ function HomePage() {
   const featured = nextMatch(matchesList);
   const upcoming = upcomingMatches(3, matchesList);
   const { format } = useTimeFormat();
-  const championCode = useChampion();
+  const localChampionCode = useChampion();
+  const championCode = localChampionCode || profile?.country_code || null;
   const champion = championCode ? teamByCode(championCode) : null;
 
   // Hoy: matches del día actual del dispositivo
@@ -81,6 +83,7 @@ function HomePage() {
   }, [matchesList]);
 
   const { h, m, s } = useCountdown(featured.kickoff);
+  const featuredPrediction = usePrediction(featured.id);
 
   return (
     <AppShell>
@@ -96,8 +99,7 @@ function HomePage() {
           />
           <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-background/30 to-background" />
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_30%,oklch(0.86_0.22_152/0.18),transparent_60%)]" />
-
-          <div className="relative z-10 flex items-center justify-between px-5 pt-[max(20px,env(safe-area-inset-top))]">
+          <div className="relative z-20 flex items-center justify-between px-5 pt-[max(20px,env(safe-area-inset-top))]">
             <div className="flex items-center gap-3">
               <button
                 onClick={openSidebar}
@@ -107,9 +109,11 @@ function HomePage() {
                 <Menu className="h-4 w-4 text-white" />
               </button>
               <div className="flex items-center gap-2">
-                <span className="grid h-9 w-9 place-items-center rounded-full bg-primary text-primary-foreground neon-glow">
-                  <span className="font-display text-lg">G</span>
-                </span>
+                <img
+                  src="/icons/ball.png"
+                  alt="Golazo"
+                  className="h-10 w-10 rounded-full object-cover"
+                />
                 <div>
                   <div className="font-display text-xl leading-none tracking-wide">GOLAZO</div>
                   <div className="text-[10px] uppercase tracking-[0.25em] text-white/50">Mundial 26</div>
@@ -121,9 +125,7 @@ function HomePage() {
                 <Flag code={profile?.country_code || userProfile.country.code} size={22} />
                 <span className="text-xs font-semibold">#{userRank}</span>
               </div>
-              <Link to="/profile" className="shrink-0 transition active:scale-95">
-                <Flag code={profile?.country_code || "cr"} size={32} className="ring-2 ring-white/10" />
-              </Link>
+              <ProfileDropdown />
             </div>
           </div>
 
@@ -183,17 +185,36 @@ function HomePage() {
 
             <div className="mt-5 flex items-center justify-between text-xs text-white/55">
               <span>{featured.stadium}</span>
-              <Link
-                to="/matches"
-                search={
-                  featured.stage === "group"
-                    ? { group: featured.group }
-                    : { stage: featured.stage }
-                }
-                className="flex items-center gap-1 font-semibold text-primary"
-              >
-                Predecir ahora <ChevronRight className="h-3.5 w-3.5" />
-              </Link>
+              {featuredPrediction ? (
+                <div className="flex items-center gap-3">
+                  <span className="font-semibold text-white/60">
+                    Tu pronóstico: <span className="font-display text-primary text-sm font-bold bg-white/5 px-2.5 py-1 rounded-xl border border-white/5">{featuredPrediction.home} - {featuredPrediction.away}</span>
+                  </span>
+                  <Link
+                    to="/matches"
+                    search={
+                      featured.stage === "group"
+                        ? { group: featured.group }
+                        : { stage: featured.stage }
+                    }
+                    className="flex items-center gap-0.5 font-bold text-primary hover:underline"
+                  >
+                    Modificar <ChevronRight className="h-3.5 w-3.5" />
+                  </Link>
+                </div>
+              ) : (
+                <Link
+                  to="/matches"
+                  search={
+                    featured.stage === "group"
+                      ? { group: featured.group }
+                      : { stage: featured.stage }
+                  }
+                  className="flex items-center gap-1 font-semibold text-primary"
+                >
+                  Predecir ahora <ChevronRight className="h-3.5 w-3.5" />
+                </Link>
+              )}
             </div>
           </div>
         </div>
@@ -243,7 +264,12 @@ function HomePage() {
 
         {today.length > 0 ? (
           <div className="space-y-4">
-            {today.map((m) => <MatchCard key={m.id} match={m} />)}
+            {[
+              ...today.filter((m) => m.status !== "finished"),
+              ...today.filter((m) => m.status === "finished"),
+            ].map((m) => (
+              <MatchCard key={m.id} match={m} dimmed={m.status === "finished"} />
+            ))}
           </div>
         ) : (
           <div className="glass rounded-3xl p-5">

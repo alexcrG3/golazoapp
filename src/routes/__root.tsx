@@ -76,12 +76,20 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
       { name: "theme-color", content: "#0a0f14" },
-      { title: "Golazo — World Cup Predictions" },
-      { name: "description", content: "Predict every World Cup match. Climb the global leaderboard. Feel the cup." },
-      { property: "og:title", content: "Golazo — World Cup Predictions" },
-      { property: "og:description", content: "Premium World Cup prediction experience." },
+      { title: "Golazo — Mundial 2026" },
+      { name: "description", content: "Predice cada partido del Mundial 2026. Escala el ranking global." },
+      { property: "og:title", content: "Golazo — Mundial 2026" },
+      { property: "og:description", content: "La quiniela del Mundial más premium." },
       { property: "og:type", content: "website" },
+      { property: "og:image", content: "/icons/icon-512.png" },
       { name: "twitter:card", content: "summary_large_image" },
+      // PWA - iOS
+      { name: "apple-mobile-web-app-capable", content: "yes" },
+      { name: "apple-mobile-web-app-status-bar-style", content: "black-translucent" },
+      { name: "apple-mobile-web-app-title", content: "Golazo" },
+      // PWA - Android
+      { name: "mobile-web-app-capable", content: "yes" },
+      { name: "application-name", content: "Golazo" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
@@ -91,6 +99,13 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         rel: "stylesheet",
         href: "https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter+Tight:wght@400;500;600;700;800&display=swap",
       },
+      // PWA manifest
+      { rel: "manifest", href: "/manifest.json" },
+      // Favicon
+      { rel: "icon", href: "/favicon.png", type: "image/png" },
+      // Apple touch icon (iOS home screen)
+      { rel: "apple-touch-icon", href: "/icons/apple-touch-icon.png" },
+      { rel: "apple-touch-icon", sizes: "180x180", href: "/icons/icon-180.png" },
     ],
   }),
   shellComponent: RootShell,
@@ -101,11 +116,11 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 
 function RootShell({ children }: { children: ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="es" suppressHydrationWarning>
       <head>
         <HeadContent />
       </head>
-      <body>
+      <body suppressHydrationWarning>
         {children}
         <Scripts />
       </body>

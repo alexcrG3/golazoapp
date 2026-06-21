@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import type { User } from "@supabase/supabase-js";
 import { predictionsStore } from "@/lib/predictionsStore";
@@ -17,6 +17,8 @@ export function useAuth() {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
+  // Flag: true una vez que getSession() termina de leer localStorage
+  const initializedRef = useRef(false);
 
   const fetchProfile = async (userId: string) => {
     try {
@@ -83,39 +85,51 @@ export function useAuth() {
   useEffect(() => {
     let active = true;
 
-    // Obtener sesión inicial
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      if (!active) return;
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        await Promise.all([
-          fetchProfile(session.user.id),
-          syncPredictions(session.user.id)
-        ]);
-      }
-      setLoading(false);
-    });
-
-    // Escuchar cambios de estado de autenticación
+    // 1. Suscribirse a cambios de auth PRIMERO (antes de getSession)
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (!active) return;
+
       console.log("[Auth Change Event]:", event);
+
+      // ⚠️ Durante la hidratación SSR, Supabase puede emitir un SIGNED_OUT
+      // antes de que getSession() lea el token de localStorage.
+      // Lo ignoramos hasta que la inicialización esté completa.
+      if (event === "SIGNED_OUT" && !initializedRef.current) {
+        console.log("[Auth] Ignorando SIGNED_OUT durante hidratación inicial");
+        return;
+      }
+
       setUser(session?.user ?? null);
-      
+
       if (session?.user) {
-        setLoading(true);
         await Promise.all([
           fetchProfile(session.user.id),
-          syncPredictions(session.user.id)
+          syncPredictions(session.user.id),
         ]);
         setLoading(false);
-      } else {
+      } else if (event === "SIGNED_OUT") {
+        // Solo limpiar si es un logout explícito del usuario
         setProfile(null);
-        predictionsStore.clear(); // Limpiar store local al cerrar sesión
+        predictionsStore.clear();
         setLoading(false);
       }
+    });
+
+    // 2. Leer sesión guardada en localStorage
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      if (!active) return;
+      initializedRef.current = true; // Marcamos que ya leímos localStorage
+
+      setUser(session?.user ?? null);
+      if (session?.user) {
+        await Promise.all([
+          fetchProfile(session.user.id),
+          syncPredictions(session.user.id),
+        ]);
+      }
+      setLoading(false);
     });
 
     return () => {
@@ -137,4 +151,3 @@ export function useAuth() {
     refreshProfile,
   };
 }
-

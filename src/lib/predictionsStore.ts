@@ -116,7 +116,7 @@ export function isPredictionExact(
   return pred.home === match.scoreHome && pred.away === match.scoreAway;
 }
 
-export function calculateUserStats(matches: any[]) {
+export function calculateUserStats(matches: any[], fallbackChampionCode?: string | null) {
   const predictions = predictionsStore.getAll();
   let totalPredictions = 0;
   let correct = 0;
@@ -141,7 +141,7 @@ export function calculateUserStats(matches: any[]) {
   }
 
   // Puntos por acertar el campeón (si la final terminó)
-  const championCode = predictionsStore.getChampion();
+  const championCode = predictionsStore.getChampion() || fallbackChampionCode;
   if (championCode) {
     const finalMatch = matches.find((m: any) => m.stage === "final");
     if (finalMatch && finalMatch.status === "finished" && finalMatch.scoreHome != null && finalMatch.scoreAway != null) {

@@ -12,6 +12,7 @@ import { fetchRealGroupsAndMatches } from "@/lib/api-football";
 import { z } from "zod";
 import { useSidebar } from "@/contexts/SidebarContext";
 import { useAuth } from "@/hooks/useAuth";
+import { ProfileDropdown } from "@/components/ProfileDropdown";
 
 const matchesSearchSchema = z.object({
   group: z.string().optional(),
@@ -82,7 +83,7 @@ function MatchesPage() {
 
   return (
     <AppShell>
-      <header className="px-5 pt-[max(28px,env(safe-area-inset-top))]">
+      <header className="relative z-20 px-5 pt-[max(28px,env(safe-area-inset-top))]">
         <div className="flex items-center justify-between gap-3 mb-4">
           <button
             onClick={openSidebar}
@@ -93,15 +94,7 @@ function MatchesPage() {
           </button>
           <div className="flex items-center gap-2.5">
             <TimeFormatToggle />
-            <Link to="/profile" className="shrink-0 transition active:scale-95">
-              {user ? (
-                <Flag code={profile?.country_code || "cr"} size={32} className="ring-2 ring-white/10" />
-              ) : (
-                <div className="grid h-8 w-8 place-items-center rounded-full bg-white/5 border border-white/10 text-white/60">
-                  <User className="h-4 w-4" />
-                </div>
-              )}
-            </Link>
+            <ProfileDropdown />
           </div>
         </div>
         <div className="flex items-start justify-between gap-3">
@@ -255,8 +248,11 @@ function GroupView({ groupName, matchesList, groupsList }: { groupName: string; 
 
       <section className="mt-8 space-y-4 px-4">
         <h2 className="px-1 font-display text-2xl text-white">Partidos del Grupo {groupName}</h2>
-        {groupMatches.map((m) => (
-          <MatchCard key={m.id} match={m} />
+        {[
+          ...groupMatches.filter((m) => m.status !== "finished"),
+          ...groupMatches.filter((m) => m.status === "finished"),
+        ].map((m) => (
+          <MatchCard key={m.id} match={m} dimmed={m.status === "finished"} />
         ))}
       </section>
     </>
@@ -268,8 +264,11 @@ function StageView({ stage, label, matchesList }: { stage: Stage; label: string;
   return (
     <section className="mt-6 space-y-4 px-4">
       <h2 className="px-1 font-display text-2xl text-white">{label}</h2>
-      {list.map((m) => (
-        <MatchCard key={m.id} match={m} />
+      {[
+        ...list.filter((m) => m.status !== "finished"),
+        ...list.filter((m) => m.status === "finished"),
+      ].map((m) => (
+        <MatchCard key={m.id} match={m} dimmed={m.status === "finished"} />
       ))}
     </section>
   );

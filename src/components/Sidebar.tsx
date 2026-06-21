@@ -72,9 +72,11 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
         {/* Top Header */}
         <div className="p-5 border-b border-white/10 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <span className="grid h-8 w-8 place-items-center rounded-lg bg-primary text-primary-foreground font-display text-base">
-              G
-            </span>
+            <img
+              src="/icons/ball.png"
+              alt="Golazo"
+              className="h-9 w-9 rounded-lg object-cover"
+            />
             <div>
               <span className="font-display text-lg tracking-wide text-white block leading-none">GOLAZO</span>
               <span className="text-[9px] uppercase tracking-widest text-white/40">Mundial 2026</span>
@@ -93,7 +95,11 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
           {/* User Profile Card */}
           {user ? (
             <div className="glass p-4 rounded-2xl flex items-center gap-3">
-              <Flag code={profile?.country_code || "cr"} size={42} className="ring-2 ring-primary/30" />
+              {profile?.avatar_url ? (
+                <img src={profile.avatar_url} alt="Avatar" className="h-[42px] w-[42px] rounded-full object-cover ring-2 ring-primary/30" />
+              ) : (
+                <Flag code={profile?.country_code || "cr"} size={42} className="ring-2 ring-primary/30" />
+              )}
               <div className="min-w-0 flex-1">
                 <span className="block font-semibold text-white truncate leading-tight">
                   {profile?.full_name || user.email?.split("@")[0]}

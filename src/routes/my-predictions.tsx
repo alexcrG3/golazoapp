@@ -56,9 +56,9 @@ function MyPredictionsPage() {
     return true;
   });
 
-  // Ordenar: finalizados primero (o viceversa, por fecha de kickoff)
+  // Ordenar: cronológico ascendente (más antiguos primero)
   const sortedMatches = [...filteredMatches].sort((a, b) => {
-    return new Date(b.kickoff).getTime() - new Date(a.kickoff).getTime();
+    return new Date(a.kickoff).getTime() - new Date(b.kickoff).getTime();
   });
 
   return (

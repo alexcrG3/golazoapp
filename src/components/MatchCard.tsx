@@ -7,11 +7,11 @@ import { predictionsStore, calculateMatchPoints, isPredictionExact, isPrediction
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 
-export function MatchCard({ match, compact = false }: { match: Match; compact?: boolean }) {
+export function MatchCard({ match, compact = false, dimmed = false }: { match: Match; compact?: boolean; dimmed?: boolean }) {
   const { format } = useTimeFormat();
   const existing = predictionsStore.get(match.id);
-  const [home, setHome] = useState<number>(existing?.home ?? 1);
-  const [away, setAway] = useState<number>(existing?.away ?? 1);
+  const [home, setHome] = useState<number>(existing?.home ?? 0);
+  const [away, setAway] = useState<number>(existing?.away ?? 0);
   const [saved, setSaved] = useState(!!existing);
   const locked = match.status !== "scheduled";
 
@@ -64,7 +64,7 @@ export function MatchCard({ match, compact = false }: { match: Match; compact?: 
   const hasRealScore = match.status === "finished" || match.status === "live";
 
   return (
-    <div className={`glass animate-float-up relative overflow-hidden rounded-3xl ${compact ? "p-4" : "p-5"}`}>
+    <div className={`glass animate-float-up relative overflow-hidden rounded-3xl ${compact ? "p-4" : "p-5"} ${dimmed ? "opacity-50 grayscale-[40%]" : ""}`}>
       <div className="mb-4 flex items-center justify-between text-[11px] font-semibold uppercase tracking-[0.18em] text-white/60">
         <span className={`rounded-full px-2.5 py-1 ${isKnockout ? "bg-primary/15 text-primary ring-1 ring-primary/30" : "bg-white/8"}`}>
           {stageLabel}
@@ -79,7 +79,7 @@ export function MatchCard({ match, compact = false }: { match: Match; compact?: 
         <div className="flex flex-col items-center">
           {hasRealScore && match.scoreHome !== undefined && match.scoreAway !== undefined ? (
             <div className="flex flex-col items-center">
-              <span className="font-display text-3xl font-extrabold text-gradient-neon leading-none">
+              <span className="font-display text-3xl font-extrabold text-gradient-neon leading-none whitespace-nowrap">
                 {match.scoreHome} - {match.scoreAway}
               </span>
               <span className={`mt-1.5 rounded-full px-2 py-0.5 text-[8px] font-bold uppercase tracking-widest ${

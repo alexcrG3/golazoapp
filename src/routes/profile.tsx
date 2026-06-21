@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Share2, LogOut, Lock, Mail, User as UserIcon, Flag as FlagIcon, Eye, EyeOff, ChevronRight, Trophy, Menu, BookOpen, ShieldCheck } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { AppShell } from "@/components/AppShell";
 import { Flag } from "@/components/Flag";
 import { fetchRealGroupsAndMatches } from "@/lib/api-football";
@@ -14,6 +14,7 @@ import { groups as staticGroups } from "@/data/groups";
 import { matches as staticMatches } from "@/data/matches";
 import { toast } from "sonner";
 import { useSidebar } from "@/contexts/SidebarContext";
+import { ProfileDropdown } from "@/components/ProfileDropdown";
 
 export const Route = createFileRoute("/profile")({
   head: () => ({
@@ -37,8 +38,10 @@ function ProfilePage() {
   const [countryCode, setCountryCode] = useState("cr");
   const [submitting, setSubmitting] = useState(false);
   const [submittingPassword, setSubmittingPassword] = useState(false);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
+  const avatarInputRef = useRef<HTMLInputElement>(null);
 
   const { data: apiData } = useQuery({
     queryKey: ["realMatchesAndGroups"],
@@ -52,7 +55,7 @@ function ProfilePage() {
   const matchesList = apiData?.matches || staticMatches;
   const groupsList = apiData?.groups || staticGroups;
   const userPredictions = predictionsStore.getAll();
-  const dynamicStats = calculateUserStats(matchesList);
+  const dynamicStats = calculateUserStats(matchesList, profile?.country_code);
   const leaderboardList = getDynamicLeaderboard(matchesList);
   
   // Encontrar la posición del usuario en el leaderboard dinámico
@@ -166,6 +169,57 @@ function ProfilePage() {
       toast.error("Error al actualizar la contraseña: " + (err.message || err));
     } finally {
       setSubmittingPassword(false);
+    }
+  };
+
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+
+    // Validar tipo y tamaño (máx 2MB)
+    if (!file.type.startsWith("image/")) {
+      toast.error("Solo se permiten imágenes (JPG, PNG, WEBP)");
+      return;
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error("La imagen no puede superar 2 MB");
+      return;
+    }
+
+    setUploadingAvatar(true);
+    try {
+      const ext = file.name.split(".").pop();
+      const filePath = `${user.id}/avatar.${ext}`;
+
+      // Subir al bucket 'avatars'
+      const { error: uploadError } = await supabase.storage
+        .from("avatars")
+        .upload(filePath, file, { upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      // Obtener URL pública
+      const { data: { publicUrl } } = supabase.storage
+        .from("avatars")
+        .getPublicUrl(filePath);
+
+      // Guardar en profiles
+      const { error: updateError } = await supabase
+        .from("profiles")
+        .update({ avatar_url: publicUrl + `?t=${Date.now()}` })
+        .eq("id", user.id);
+
+      if (updateError) throw updateError;
+
+      await refreshProfile();
+      toast.success("¡Foto de perfil actualizada!");
+    } catch (err: any) {
+      console.error(err);
+      toast.error("Error al subir la imagen: " + (err.message || err));
+    } finally {
+      setUploadingAvatar(false);
+      // Limpiar input para permitir re-subir la misma imagen
+      if (avatarInputRef.current) avatarInputRef.current.value = "";
     }
   };
 
@@ -447,7 +501,7 @@ function ProfilePage() {
     <AppShell>
       {/* Hero */}
       <section className="relative px-5 pt-[max(28px,env(safe-area-inset-top))]">
-        <div className="flex items-center justify-between">
+        <div className="relative z-20 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <button
               onClick={openSidebar}
@@ -458,18 +512,60 @@ function ProfilePage() {
             </button>
             <span className="text-[11px] font-bold uppercase tracking-[0.25em] text-primary">Mi Identidad</span>
           </div>
-          <button
-            onClick={handleLogout}
-            title="Cerrar Sesión"
-            className="glass grid h-9 w-9 place-items-center rounded-full hover:bg-white/15 transition"
-          >
-            <LogOut className="h-4 w-4 text-white/70 hover:text-red-400" />
-          </button>
+          <ProfileDropdown />
         </div>
 
         <div className="mt-6 flex flex-col items-center text-center">
+          {/* Avatar con botón de upload */}
           <div className="relative">
-            <Flag code={displayProfile.country_code} size={120} className="ring-4 ring-primary/40 neon-glow" />
+            <button
+              onClick={() => avatarInputRef.current?.click()}
+              disabled={uploadingAvatar}
+              className="relative block rounded-full focus:outline-none active:scale-95 transition"
+              title="Cambiar foto de perfil"
+            >
+              {displayProfile.avatar_url ? (
+                <img
+                  src={displayProfile.avatar_url}
+                  alt="Avatar"
+                  className="h-[120px] w-[120px] rounded-full object-cover ring-4 ring-primary/40 neon-glow"
+                />
+              ) : (
+                <Flag code={displayProfile.country_code} size={120} className="ring-4 ring-primary/40 neon-glow" />
+              )}
+              {/* Overlay spinner mientras sube */}
+              {uploadingAvatar && (
+                <div className="absolute inset-0 flex items-center justify-center rounded-full bg-black/60">
+                  <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                </div>
+              )}
+            </button>
+
+            {/* Badge cámara permanente — siempre visible en esquina inferior derecha */}
+            <button
+              onClick={() => avatarInputRef.current?.click()}
+              disabled={uploadingAvatar}
+              className="absolute bottom-3 right-0 flex h-8 w-8 items-center justify-center rounded-full bg-primary ring-2 ring-background neon-glow transition active:scale-90 disabled:opacity-50"
+              title="Cambiar foto"
+            >
+              {uploadingAvatar ? (
+                <div className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-black border-t-transparent" />
+              ) : (
+                <svg className="h-4 w-4 text-black" fill="none" stroke="currentColor" strokeWidth={2.2} viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6.827 6.175A2.31 2.31 0 0 1 5.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 0 0-1.134-.175 2.31 2.31 0 0 1-1.64-1.055l-.822-1.316a2.192 2.192 0 0 0-1.736-1.039 48.774 48.774 0 0 0-5.232 0 2.192 2.192 0 0 0-1.736 1.039l-.821 1.316Z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 12.75a4.5 4.5 0 1 1-9 0 4.5 4.5 0 0 1 9 0Z" />
+                </svg>
+              )}
+            </button>
+
+            {/* Input oculto de archivo */}
+            <input
+              ref={avatarInputRef}
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              className="hidden"
+              onChange={handleAvatarUpload}
+            />
             <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 rounded-full bg-primary px-3 py-0.5 text-[10px] font-bold uppercase tracking-widest text-primary-foreground animate-float">
               #{s.rank}
             </span>

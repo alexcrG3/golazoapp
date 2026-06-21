@@ -9,6 +9,11 @@ export type LeaderboardEntry = {
   accuracy: number;
   streak: number;
   isYou?: boolean;
+  id?: string;
+  exactCount?: number;
+  correctCount?: number;
+  championPick?: string | null;
+  maxStreak?: number;
 };
 
 const seed: Omit<LeaderboardEntry, "rank">[] = [
@@ -108,6 +113,11 @@ export function getDynamicLeaderboard(matchesList: any[]): LeaderboardEntry[] {
         points: pts,
         accuracy,
         streak: 0,
+        id: "you",
+        exactCount: exact,
+        correctCount: Math.max(0, correct - exact),
+        maxStreak: exact,
+        championPick: championCode,
       };
     } else {
       let pts = 0;
@@ -137,6 +147,11 @@ export function getDynamicLeaderboard(matchesList: any[]): LeaderboardEntry[] {
         points: pts,
         accuracy,
         streak: Math.min(5, Math.max(0, pts % 3)),
+        id: `mock-${player.name}`,
+        exactCount: exact,
+        correctCount: Math.max(0, correct - exact),
+        maxStreak: Math.max(Math.min(5, Math.max(0, pts % 3)), exact),
+        championPick: player.country,
       };
     }
   });
@@ -190,7 +205,67 @@ export async function getSupabaseLeaderboard(
         }
       }
 
+      // Puntos por acertar el campeón
+      const isYou = profile.id === currentUserId;
+      let championCode = profile.country_code;
+      if (isYou) {
+        const localChampion = predictionsStore.getChampion();
+        if (localChampion) {
+          championCode = localChampion;
+        }
+      }
+
+      const finalMatch = matchesList.find((m: any) => m.stage === "final");
+      if (finalMatch && finalMatch.status === "finished" && finalMatch.scoreHome != null && finalMatch.scoreAway != null) {
+        let winnerCode = "";
+        if (finalMatch.scoreHome > finalMatch.scoreAway) {
+          winnerCode = finalMatch.home.code;
+        } else if (finalMatch.scoreAway > finalMatch.scoreHome) {
+          winnerCode = finalMatch.away.code;
+        }
+        if (winnerCode && winnerCode === championCode) {
+          pts += 20;
+        }
+      }
+
       const accuracy = finishedPreds > 0 ? Math.round((correct / finishedPreds) * 100) : 0;
+
+      // Calcular racha activa y racha máxima de marcadores exactos
+      const finishedMatches = [...matchesList]
+        .filter((m) => m.status === "finished")
+        .sort((a, b) => new Date(b.date || "").getTime() - new Date(a.date || "").getTime());
+
+      let streak = 0;
+      for (const m of finishedMatches) {
+        const pred = userPreds.find((p) => p.match_id === m.id);
+        if (pred) {
+          if (pred.home_score === m.scoreHome && pred.away_score === m.scoreAway) {
+            streak++;
+          } else {
+            // Predicción incorrecta o no exacta rompe la racha
+            break;
+          }
+        }
+      }
+
+      let maxStreak = 0;
+      let tempStreak = 0;
+      const chronoMatches = [...finishedMatches]
+        .sort((a, b) => new Date(a.date || "").getTime() - new Date(b.date || "").getTime());
+        
+      for (const m of chronoMatches) {
+        const pred = userPreds.find((p) => p.match_id === m.id);
+        if (pred) {
+          if (pred.home_score === m.scoreHome && pred.away_score === m.scoreAway) {
+            tempStreak++;
+            if (tempStreak > maxStreak) {
+              maxStreak = tempStreak;
+            }
+          } else {
+            tempStreak = 0;
+          }
+        }
+      }
 
       return {
         rank: 0,
@@ -198,8 +273,13 @@ export async function getSupabaseLeaderboard(
         country: profile.country_code || "cr",
         points: pts,
         accuracy,
-        streak: 0,
+        streak,
         isYou: profile.id === currentUserId,
+        id: profile.id,
+        exactCount: exact,
+        correctCount: Math.max(0, correct - exact),
+        maxStreak: maxStreak,
+        championPick: championCode,
       };
     });
 
@@ -210,6 +290,85 @@ export async function getSupabaseLeaderboard(
   } catch (err) {
     console.error("Error al calcular ranking de Supabase:", err);
     return getDynamicLeaderboard(matchesList);
+  }
+}
+
+export async function getOtherPrizesStatus(matchesList: any[]): Promise<{
+  firstGoalWinner: { name: string; country: string } | null;
+  hatTrickWinners: { name: string; country: string; maxStreak: number }[];
+}> {
+  try {
+    // 1. Obtener el primer pronóstico registrado
+    const { data: firstPreds, error: fpError } = await supabase
+      .from("predictions")
+      .select("user_id")
+      .order("created_at", { ascending: true })
+      .limit(1);
+
+    let firstGoalWinner = null;
+    if (!fpError && firstPreds && firstPreds.length > 0) {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("full_name, username, country_code")
+        .eq("id", firstPreds[0].user_id)
+        .single();
+      if (profile) {
+        firstGoalWinner = {
+          name: profile.full_name || profile.username,
+          country: profile.country_code || "cr",
+        };
+      }
+    }
+
+    // 2. Obtener ganadores del logro Hat-Trick (maxStreak >= 3)
+    const { data: dbProfiles, error: pError } = await supabase.from("profiles").select("*");
+    const { data: dbPredictions, error: predError } = await supabase.from("predictions").select("*");
+
+    const hatTrickWinners: { name: string; country: string; maxStreak: number }[] = [];
+
+    if (!pError && !predError && dbProfiles && dbPredictions) {
+      const finishedMatches = matchesList.filter((m) => m.status === "finished");
+      
+      dbProfiles.forEach((profile) => {
+        const userPreds = dbPredictions.filter((p) => p.user_id === profile.id);
+        
+        // Calcular racha máxima
+        let maxStreak = 0;
+        let currentStreak = 0;
+        const chronoMatches = [...finishedMatches]
+          .sort((a, b) => new Date(a.date || "").getTime() - new Date(b.date || "").getTime());
+          
+        for (const m of chronoMatches) {
+          const pred = userPreds.find((p) => p.match_id === m.id);
+          if (pred) {
+            if (pred.home_score === m.scoreHome && pred.away_score === m.scoreAway) {
+              currentStreak++;
+              if (currentStreak > maxStreak) {
+                maxStreak = currentStreak;
+              }
+            } else {
+              currentStreak = 0;
+            }
+          }
+        }
+
+        if (maxStreak >= 3) {
+          hatTrickWinners.push({
+            name: profile.full_name || profile.username,
+            country: profile.country_code || "cr",
+            maxStreak,
+          });
+        }
+      });
+    }
+
+    return {
+      firstGoalWinner,
+      hatTrickWinners: hatTrickWinners.sort((a, b) => b.maxStreak - a.maxStreak),
+    };
+  } catch (err) {
+    console.error("Error al obtener estado de otros premios:", err);
+    return { firstGoalWinner: null, hatTrickWinners: [] };
   }
 }
 

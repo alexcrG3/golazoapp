@@ -5,6 +5,7 @@ import { AppShell } from "@/components/AppShell";
 import { Flag } from "@/components/Flag";
 import { teams, teamByCode } from "@/data";
 import { predictionsStore, useChampion } from "@/lib/predictionsStore";
+import { useAuth } from "@/hooks/useAuth";
 
 export const Route = createFileRoute("/champion")({
   head: () => ({
@@ -17,7 +18,9 @@ export const Route = createFileRoute("/champion")({
 });
 
 function ChampionPage() {
-  const championCode = useChampion();
+  const { profile } = useAuth();
+  const localChampionCode = useChampion();
+  const championCode = localChampionCode || profile?.country_code || null;
   const champion = championCode ? teamByCode(championCode) : null;
   const [query, setQuery] = useState("");
   const [confirming, setConfirming] = useState<string | null>(null);

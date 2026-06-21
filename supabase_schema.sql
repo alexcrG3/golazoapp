@@ -82,3 +82,39 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 CREATE OR REPLACE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
   FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
+
+
+-- 4. Bucket de Storage para fotos de perfil (avatars)
+-- Ejecutar esto en el SQL Editor de Supabase:
+INSERT INTO storage.buckets (id, name, public)
+VALUES ('avatars', 'avatars', true)
+ON CONFLICT (id) DO NOTHING;
+
+-- Política: cualquiera puede ver las fotos de perfil (bucket público)
+CREATE POLICY "Avatars son públicos"
+ON storage.objects FOR SELECT
+USING (bucket_id = 'avatars');
+
+-- Política: usuarios autenticados pueden subir su propia foto
+CREATE POLICY "Usuarios pueden subir su avatar"
+ON storage.objects FOR INSERT
+WITH CHECK (
+  bucket_id = 'avatars'
+  AND auth.uid()::text = (storage.foldername(name))[1]
+);
+
+-- Política: usuarios autenticados pueden actualizar su propia foto
+CREATE POLICY "Usuarios pueden actualizar su avatar"
+ON storage.objects FOR UPDATE
+USING (
+  bucket_id = 'avatars'
+  AND auth.uid()::text = (storage.foldername(name))[1]
+);
+
+-- Política: usuarios autenticados pueden eliminar su propia foto
+CREATE POLICY "Usuarios pueden eliminar su avatar"
+ON storage.objects FOR DELETE
+USING (
+  bucket_id = 'avatars'
+  AND auth.uid()::text = (storage.foldername(name))[1]
+);
