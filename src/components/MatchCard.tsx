@@ -82,13 +82,22 @@ export function MatchCard({ match, compact = false, dimmed = false }: { match: M
               <span className="font-display text-3xl font-extrabold text-gradient-neon leading-none whitespace-nowrap">
                 {match.scoreHome} - {match.scoreAway}
               </span>
-              <span className={`mt-1.5 rounded-full px-2 py-0.5 text-[8px] font-bold uppercase tracking-widest ${
-                match.status === "live"
-                  ? "bg-red-500/20 text-red-400 animate-pulse ring-1 ring-red-500/30"
-                  : "bg-white/10 text-white/60"
-              }`}>
-                {match.status === "live" ? "En Vivo" : "Final"}
-              </span>
+              {match.status === "live" ? (
+                <a
+                  href={`https://www.google.com/search?q=ver+${encodeURIComponent(match.home.name + " vs " + match.away.name)}+en+vivo+online+gratis`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-1.5 inline-flex items-center gap-1.5 rounded-full bg-red-500/20 text-red-400 animate-pulse ring-1 ring-red-500/30 px-2 py-0.5 text-[8px] font-bold uppercase tracking-widest hover:bg-red-500/35 transition active:scale-95 cursor-pointer"
+                  title="Haz clic para buscar transmisiones gratuitas en vivo"
+                >
+                  <span className="h-1 w-1 rounded-full bg-red-500" />
+                  En Vivo 📺
+                </a>
+              ) : (
+                <span className="mt-1.5 rounded-full bg-white/10 px-2 py-0.5 text-[8px] font-bold uppercase tracking-widest text-white/60">
+                  Final
+                </span>
+              )}
             </div>
           ) : (
             <div className="flex flex-col items-center">

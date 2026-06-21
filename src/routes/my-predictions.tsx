@@ -166,9 +166,15 @@ function MyPredictionsPage() {
                         Finalizado
                       </span>
                     ) : match.status === "live" ? (
-                      <span className="inline-flex items-center gap-1 rounded-full bg-red-500/15 px-2.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-red-400 animate-pulse ring-1 ring-red-500/30">
-                        En Juego
-                      </span>
+                      <a
+                        href={`https://www.google.com/search?q=ver+${encodeURIComponent(match.home.name + " vs " + match.away.name)}+en+vivo+online+gratis`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1.5 rounded-full bg-red-500/15 px-2.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-red-400 animate-pulse ring-1 ring-red-500/30 hover:bg-red-500/25 transition active:scale-95 cursor-pointer"
+                        title="Haz clic para buscar transmisiones gratuitas en vivo"
+                      >
+                        En Juego 📺
+                      </a>
                     ) : (
                       <span className="inline-flex items-center gap-1 rounded-full bg-white/5 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-white/35">
                         Pendiente
