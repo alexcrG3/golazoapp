@@ -42,7 +42,7 @@ const knockoutTabs: { key: Stage; label: string }[] = [
 function MatchesPage() {
   const { open: openSidebar } = useSidebar();
   const { user, profile } = useAuth();
-  const { data: apiData, isLoading } = useQuery({
+  const { data: apiData, isLoading, isFetching } = useQuery({
     queryKey: ["realMatchesAndGroups"],
     queryFn: fetchRealGroupsAndMatches,
     retry: 2,
