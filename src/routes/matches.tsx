@@ -42,7 +42,7 @@ const knockoutTabs: { key: Stage; label: string }[] = [
 function MatchesPage() {
   const { open: openSidebar } = useSidebar();
   const { user, profile } = useAuth();
-  const { data: apiData, isFetching } = useQuery({
+  const { data: apiData, isLoading } = useQuery({
     queryKey: ["realMatchesAndGroups"],
     queryFn: fetchRealGroupsAndMatches,
     retry: 2,
@@ -80,6 +80,17 @@ function MatchesPage() {
       });
     }
   }, [apiData]);
+
+  if (isLoading) {
+    return (
+      <AppShell>
+        <div className="flex h-[75vh] flex-col items-center justify-center gap-4">
+          <div className="h-10 w-10 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+          <span className="text-sm text-white/55">Cargando partidos...</span>
+        </div>
+      </AppShell>
+    );
+  }
 
   return (
     <AppShell>

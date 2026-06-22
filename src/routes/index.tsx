@@ -44,7 +44,7 @@ function useCountdown(targetIso: string) {
 }
 
 function HomePage() {
-  const { data: apiData } = useQuery({
+  const { data: apiData, isLoading } = useQuery({
     queryKey: ["realMatchesAndGroups"],
     queryFn: fetchRealGroupsAndMatches,
     retry: 2,
@@ -88,6 +88,17 @@ function HomePage() {
 
   const { h, m, s } = useCountdown(featured.kickoff);
   const featuredPrediction = usePrediction(featured.id);
+
+  if (isLoading) {
+    return (
+      <AppShell>
+        <div className="flex h-[75vh] flex-col items-center justify-center gap-4">
+          <div className="h-10 w-10 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+          <span className="text-sm text-white/55">Cargando partidos...</span>
+        </div>
+      </AppShell>
+    );
+  }
 
   return (
     <AppShell>

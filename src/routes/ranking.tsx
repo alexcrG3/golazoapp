@@ -28,7 +28,7 @@ function RankingPage() {
   const [activeTab, setActiveTab] = useState<"leaderboard" | "prizes">("leaderboard");
   const [selectedUser, setSelectedUser] = useState<LeaderboardEntry | null>(null);
 
-  const { data: apiData } = useQuery({
+  const { data: apiData, isLoading: matchesLoading } = useQuery({
     queryKey: ["realMatchesAndGroups"],
     queryFn: fetchRealGroupsAndMatches,
     retry: 2,
@@ -40,7 +40,7 @@ function RankingPage() {
   const matchesList = apiData?.matches || [];
 
   // Query para obtener el ranking dinámico desde Supabase
-  const { data: dynamicLeaderboard = [] } = useQuery({
+  const { data: dynamicLeaderboard = [], isLoading: leaderboardLoading } = useQuery({
     queryKey: ["supabaseLeaderboard", matchesList, user?.id],
     queryFn: () => getSupabaseLeaderboard(matchesList, user?.id),
     enabled: matchesList.length > 0,
@@ -54,6 +54,19 @@ function RankingPage() {
   });
 
   const [first, second, third, ...rest] = dynamicLeaderboard;
+
+  const isCurrentlyLoading = matchesLoading || (matchesList.length > 0 && leaderboardLoading);
+
+  if (isCurrentlyLoading) {
+    return (
+      <AppShell>
+        <div className="flex h-[75vh] flex-col items-center justify-center gap-4">
+          <div className="h-10 w-10 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+          <span className="text-sm text-white/55">Cargando clasificación...</span>
+        </div>
+      </AppShell>
+    );
+  }
 
   return (
     <AppShell>
