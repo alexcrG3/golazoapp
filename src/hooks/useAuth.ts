@@ -75,11 +75,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState<boolean>(getInitialLoading);
   const initializedRef = useRef(false);
-
   const fetchingProfileRef = useRef<string | null>(null);
+  const profileRef = useRef<Profile | null>(null);
+
+  useEffect(() => {
+    profileRef.current = profile;
+  }, [profile]);
 
   const fetchProfile = async (userId: string) => {
-    if (profile && profile.id === userId) return;
+    if (profileRef.current && profileRef.current.id === userId) return;
     if (fetchingProfileRef.current === userId) return;
     fetchingProfileRef.current = userId;
     try {
@@ -165,7 +169,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(currentUser);
 
       if (currentUser) {
-        setLoading(true);
+        if (!profileRef.current) {
+          setLoading(true);
+        }
         // Sincronización en segundo plano sin bloquear la carga inicial
         syncPredictions(currentUser.id).catch(err =>
           console.error("[Auth] Error en sync predictions de fondo:", err)
