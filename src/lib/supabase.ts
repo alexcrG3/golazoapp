@@ -21,10 +21,51 @@ if (!cleanUrl || !supabaseAnonKey) {
   );
 }
 
+const hybridStorage = {
+  getItem: (key: string): string | null => {
+    if (typeof window === "undefined") return null;
+    try {
+      const val = localStorage.getItem(key);
+      if (val) return val;
+    } catch {}
+    try {
+      const name = encodeURIComponent(key) + "=";
+      const ca = document.cookie.split(";");
+      for (let i = 0; i < ca.length; i++) {
+        let c = ca[i].trim();
+        if (c.indexOf(name) === 0) {
+          const val = decodeURIComponent(c.substring(name.length, c.length));
+          try { localStorage.setItem(key, val); } catch {}
+          return val;
+        }
+      }
+    } catch {}
+    return null;
+  },
+  setItem: (key: string, value: string): void => {
+    if (typeof window === "undefined") return;
+    try { localStorage.setItem(key, value); } catch {}
+    try {
+      const date = new Date();
+      date.setTime(date.getTime() + (365 * 24 * 60 * 60 * 1000));
+      document.cookie = `${encodeURIComponent(key)}=${encodeURIComponent(value)}; expires=${date.toUTCString()}; path=/; SameSite=Lax; Secure`;
+    } catch {}
+  },
+  removeItem: (key: string): void => {
+    if (typeof window === "undefined") return;
+    try { localStorage.removeItem(key); } catch {}
+    try {
+      document.cookie = `${encodeURIComponent(key)}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; SameSite=Lax; Secure`;
+    } catch {}
+  }
+};
+
 export const supabase = createClient(cleanUrl, supabaseAnonKey, {
   auth: {
     persistSession: true,
     autoRefreshToken: true,
     detectSessionInUrl: true,
+    storage: hybridStorage,
   },
 });
+

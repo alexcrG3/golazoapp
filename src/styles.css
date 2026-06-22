@@ -167,3 +167,32 @@
   scrollbar-width: none;
   &::-webkit-scrollbar { display: none; }
 }
+
+/* Hide Microsoft Edge / IE default eye and clear buttons */
+input::-ms-reveal,
+input::-ms-clear {
+  display: none !important;
+}
+
+/* Hide Chrome / Safari default credentials show buttons */
+input::-webkit-contacts-auto-fill-button,
+input::-webkit-credentials-auto-fill-button {
+  visibility: hidden !important;
+  position: absolute !important;
+  right: 0 !important;
+  pointer-events: none !important;
+  opacity: 0 !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+/* Override browser default autocomplete styles to keep premium dark styling */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  -webkit-text-fill-color: #ffffff !important;
+  transition: background-color 5000s ease-in-out 0s;
+  box-shadow: 0 0 0px 1000px oklch(0.14 0.02 250) inset, 0 0 0 1px rgba(255, 255, 255, 0.1) inset !important;
+}
+
