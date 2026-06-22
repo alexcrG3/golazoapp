@@ -4,6 +4,17 @@ Historial cronológico de cambios, mejoras y actualizaciones de la quiniela **Go
 
 ---
 
+### [2026-06-22 10:10] Optimización de Persistencia de Sesión y Carga de Perfil (AuthProvider)
+- **Descripción:** Se solucionó el retraso en la carga inicial al iniciar sesión y el error en el que el usuario aparecía temporalmente desconectado ("flicker" de sesión).
+- **Detalles:**
+  * **Arquitectura de Contexto:** Refactorizamos `useAuth` convirtiéndolo en un Context Provider global (`AuthProvider`). Antes, cada componente que llamaba al hook de autenticación ejecutaba su propia suscripción a Supabase y peticiones de base de datos en paralelo (6 ejecuciones simultáneas), saturando la conexión y provocando estados inconsistentes.
+  * **Lectura Síncrona del Cliente:** El estado inicial del usuario ahora se lee síncronamente de `localStorage` en el cliente durante el montaje inicial, eliminando la fracción de segundo en la que la cabecera e interfaz mostraban el estado deslogueado.
+  * **Carga en Segundo Plano:** Separamos la sincronización de predicciones con Supabase (`syncPredictions`) para ejecutarse de fondo y de manera asíncrona, evitando bloquear el estado de carga (`loading`) del perfil.
+- **Archivos modificados:**
+  * [useAuth.ts](file:///d:/AntigravitDev/golazo-main/src/hooks/useAuth.ts)
+  * [__root.tsx](file:///d:/AntigravitDev/golazo-main/src/routes/__root.tsx)
+
+
 ### [2026-06-20 22:15] Enlaces Interactivos de Transmisiones en Vivo
 - **Descripción:** Se transformaron los indicadores de partidos activos ("En Vivo" / "En Juego") en enlaces web interactivos.
 - **Detalles:**
