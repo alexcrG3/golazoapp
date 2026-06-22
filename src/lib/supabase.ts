@@ -36,6 +36,10 @@ const minifySession = (valueStr: string): string => {
         minified.user = {
           id: session.user.id,
           email: session.user.email,
+          aud: session.user.aud || "authenticated",
+          role: session.user.role || "authenticated",
+          app_metadata: session.user.app_metadata || {},
+          user_metadata: session.user.user_metadata || {},
         };
       }
       return JSON.stringify(minified);

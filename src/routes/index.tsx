@@ -49,8 +49,8 @@ function HomePage() {
     queryFn: fetchRealGroupsAndMatches,
     retry: 2,
     retryDelay: 2000,
-    staleTime: 0,
-    gcTime: 0,
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+    gcTime: 30 * 60 * 1000,
   });
 
   const { user, profile } = useAuth();
@@ -125,10 +125,16 @@ function HomePage() {
               </div>
             </div>
              <div className="flex items-center gap-3">
-              <div className="glass flex items-center gap-2 rounded-full px-3 py-1.5">
-                <Flag code={profile?.country_code || userProfile.country.code} size={22} />
-                <span className="text-xs font-semibold">#{userRank}</span>
-              </div>
+              {user && (
+                !profile ? (
+                  <div className="h-8 w-16 animate-pulse rounded-full bg-white/10" />
+                ) : (
+                  <div className="glass flex items-center gap-2 rounded-full px-3 py-1.5">
+                    <Flag code={profile.country_code} size={22} />
+                    <span className="text-xs font-semibold">#{userRank}</span>
+                  </div>
+                )
+              )}
               <ProfileDropdown />
             </div>
           </div>

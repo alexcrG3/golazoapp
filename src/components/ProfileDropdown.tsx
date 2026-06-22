@@ -6,7 +6,7 @@ import { supabase } from "@/lib/supabase";
 import { Flag } from "./Flag";
 
 export function ProfileDropdown() {
-  const { user, profile } = useAuth();
+  const { user, profile, loading } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
@@ -22,6 +22,12 @@ export function ProfileDropdown() {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
+
+  if (loading) {
+    return (
+      <div className="h-9 w-9 animate-pulse rounded-full bg-white/10 ring-2 ring-white/15" />
+    );
+  }
 
   if (!user) {
     return (

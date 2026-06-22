@@ -76,7 +76,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState<boolean>(getInitialLoading);
   const initializedRef = useRef(false);
 
+  const fetchingProfileRef = useRef<string | null>(null);
+
   const fetchProfile = async (userId: string) => {
+    if (profile && profile.id === userId) return;
+    if (fetchingProfileRef.current === userId) return;
+    fetchingProfileRef.current = userId;
     try {
       const { data, error } = await supabase
         .from("profiles")
@@ -93,6 +98,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch (err) {
       console.error("[Auth] Error al obtener perfil de Supabase:", err);
       setProfile(null);
+    } finally {
+      fetchingProfileRef.current = null;
     }
   };
 
@@ -144,14 +151,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (!active) return;
-      console.log("[Auth Event]:", event);
+      console.log("[Auth Event]:", event, session?.user?.id);
 
       const currentUser = session?.user ?? null;
 
       // Si aún no hemos completado la carga inicial (getSession) y el evento es nulo (sin usuario),
       // ignoramos el evento para no desloguear transitoriamente el estado síncrono inicial.
       if (!currentUser && !initializedRef.current) {
-        console.log("[Auth] Ignorando deslogueo/sesión nula durante la hidratación inicial, evento:", event);
+        console.log("[Auth] Ignorando deslogueo/sesión nula transitoria durante la hidratación inicial");
         return;
       }
 
@@ -172,25 +179,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     });
 
-    // 2. Leer sesión guardada de forma asíncrona para corroborar y actualizar
+    // 2. Esperar a que Supabase resuelva la sesión (incluyendo cualquier refresh pendiente)
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (!active) return;
+      console.log("[Auth Initial Session Resolved]:", session?.user?.id);
+      
       initializedRef.current = true;
-
       const currentUser = session?.user ?? null;
-      setUser(currentUser);
 
-      if (currentUser) {
-        setLoading(true);
-        // Sincronización en segundo plano
-        syncPredictions(currentUser.id).catch(err =>
-          console.error("[Auth] Error en sync predictions de fondo:", err)
-        );
-        await fetchProfile(currentUser.id);
-      } else {
+      if (!currentUser) {
+        setUser(null);
         setProfile(null);
+        setLoading(false);
+      } else {
+        setUser(currentUser);
+        await fetchProfile(currentUser.id);
+        setLoading(false);
       }
-      setLoading(false);
     });
 
     return () => {

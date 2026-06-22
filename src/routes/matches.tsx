@@ -47,8 +47,8 @@ function MatchesPage() {
     queryFn: fetchRealGroupsAndMatches,
     retry: 2,
     retryDelay: 2000,
-    staleTime: 0,
-    gcTime: 0,
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+    gcTime: 30 * 60 * 1000,
   });
 
   const matchesList = apiData?.matches || staticMatches;
