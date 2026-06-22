@@ -4,6 +4,16 @@ Historial cronológico de cambios, mejoras y actualizaciones de la quiniela **Go
 
 ---
 
+### [2026-06-22 10:15] Filtro de Países Clasificados al Mundial 2026 en Selectores
+- **Descripción:** Se filtraron los listados de selecciones para mostrar únicamente los 48 equipos oficialmente clasificados al Mundial 2026.
+- **Detalles:**
+  * **Selección Favorita al Registrarse:** Se reemplazó el listado global de 82 países por las 48 selecciones clasificadas (obtenidas desde la estructura oficial de grupos), eliminando la confusión de poder elegir países no participantes.
+  * **Predicción de Campeón del Mundo:** Se aplicó el mismo filtro de 48 selecciones en el buscador y selector de campeón mundial (`champion.tsx`), alineando el formulario con el subtítulo indicativo de la pantalla.
+- **Archivos modificados:**
+  * [profile.tsx](file:///d:/AntigravitDev/golazo-main/src/routes/profile.tsx)
+  * [champion.tsx](file:///d:/AntigravitDev/golazo-main/src/routes/champion.tsx)
+
+
 ### [2026-06-22 10:10] Optimización de Persistencia de Sesión y Carga de Perfil (AuthProvider)
 - **Descripción:** Se solucionó el retraso en la carga inicial al iniciar sesión y el error en el que el usuario aparecía temporalmente desconectado ("flicker" de sesión).
 - **Detalles:**
