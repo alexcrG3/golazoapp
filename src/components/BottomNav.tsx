@@ -2,6 +2,7 @@ import { Link, useRouterState } from "@tanstack/react-router";
 import { Home, Trophy, User } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { Flag } from "./Flag";
+import { useState, useEffect } from "react";
 
 // Soccer ball icon (lucide doesn't ship one consistently)
 function Ball({ className = "" }: { className?: string }) {
@@ -26,6 +27,14 @@ const navItems = [
 export function BottomNav() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const { user, profile } = useAuth();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const displayUser = mounted ? user : null;
+  const displayProfile = mounted ? profile : null;
 
   const profileActive = pathname.startsWith("/profile") || pathname.startsWith("/my-predictions") || pathname.startsWith("/rules");
 
@@ -69,9 +78,9 @@ export function BottomNav() {
           {profileActive && (
             <span className="absolute -top-2 left-1/2 -translate-x-1/2 h-[3px] w-8 rounded-full bg-primary neon-glow" />
           )}
-          {user && profile ? (
+          {displayUser && displayProfile ? (
             <Flag
-              code={profile.country_code || "cr"}
+              code={displayProfile.country_code || "cr"}
               size={22}
               className={`transition-all duration-300 ${
                 profileActive

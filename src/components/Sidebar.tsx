@@ -4,6 +4,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/lib/supabase";
 import { Flag } from "./Flag";
 import { toast } from "sonner";
+import { useState, useEffect } from "react";
 
 // Soccer ball icon
 function Ball({ className = "" }: { className?: string }) {
@@ -26,6 +27,14 @@ interface SidebarProps {
 
 export function Sidebar({ isOpen, onClose }: SidebarProps) {
   const { user, profile } = useAuth();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const displayUser = mounted ? user : null;
+  const displayProfile = mounted ? profile : null;
 
   const handleLogout = async () => {
     try {
@@ -93,19 +102,19 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
         {/* Middle Content (Scrollable) */}
         <div className="flex-1 overflow-y-auto no-scrollbar p-4 space-y-6">
           {/* User Profile Card */}
-          {user ? (
+          {displayUser ? (
             <div className="glass p-4 rounded-2xl flex items-center gap-3">
-              {profile?.avatar_url ? (
-                <img src={profile.avatar_url} alt="Avatar" className="h-[42px] w-[42px] rounded-full object-cover ring-2 ring-primary/30" />
+              {displayProfile?.avatar_url ? (
+                <img src={displayProfile.avatar_url} alt="Avatar" className="h-[42px] w-[42px] rounded-full object-cover ring-2 ring-primary/30" />
               ) : (
-                <Flag code={profile?.country_code || "cr"} size={42} className="ring-2 ring-primary/30" />
+                <Flag code={displayProfile?.country_code || "cr"} size={42} className="ring-2 ring-primary/30" />
               )}
               <div className="min-w-0 flex-1">
                 <span className="block font-semibold text-white truncate leading-tight">
-                  {profile?.full_name || user.email?.split("@")[0]}
+                  {displayProfile?.full_name || displayUser.email?.split("@")[0]}
                 </span>
                 <span className="block text-[11px] text-white/50 truncate">
-                  @{profile?.username || "usuario"}
+                  @{displayProfile?.username || "usuario"}
                 </span>
               </div>
               <Link to="/profile" onClick={onClose} className="text-primary hover:text-primary-foreground p-1 transition">
@@ -195,7 +204,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
 
         {/* Bottom Footer */}
         <div className="p-4 border-t border-white/10">
-          {user ? (
+          {displayUser ? (
             <button
               onClick={handleLogout}
               className="flex w-full items-center justify-center gap-2 rounded-xl bg-red-500/10 border border-red-500/20 py-2.5 text-sm font-bold uppercase tracking-wider text-red-400 hover:bg-red-500 hover:text-white transition"

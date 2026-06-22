@@ -10,6 +10,11 @@ export function ProfileDropdown() {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -23,13 +28,16 @@ export function ProfileDropdown() {
     };
   }, []);
 
-  if (loading) {
+  const displayUser = mounted ? user : null;
+  const displayProfile = mounted ? profile : null;
+
+  if (!mounted || loading) {
     return (
       <div className="h-9 w-9 animate-pulse rounded-full bg-white/10 ring-2 ring-white/15" />
     );
   }
 
-  if (!user) {
+  if (!displayUser) {
     return (
       <Link to="/profile" className="shrink-0 transition active:scale-95" title="Iniciar Sesión">
         <div className="grid h-9 w-9 place-items-center rounded-full bg-white/10 ring-2 ring-white/15 hover:bg-white/20 transition">
@@ -39,9 +47,9 @@ export function ProfileDropdown() {
     );
   }
 
-  const displayProfile = profile || {
-    full_name: user.email?.split("@")[0] || "Usuario",
-    username: user.email?.split("@")[0] || "usuario",
+  const finalProfile = displayProfile || {
+    full_name: displayUser.email?.split("@")[0] || "Usuario",
+    username: displayUser.email?.split("@")[0] || "usuario",
     country_code: "cr",
   };
 
@@ -63,16 +71,16 @@ export function ProfileDropdown() {
         className="shrink-0 transition active:scale-95 focus:outline-none flex items-center justify-center"
         title="Menú de perfil"
       >
-        {profile ? (
-          profile.avatar_url ? (
+        {displayProfile ? (
+          displayProfile.avatar_url ? (
             <img
-              src={profile.avatar_url}
+              src={displayProfile.avatar_url}
               alt="Avatar"
               className="h-9 w-9 rounded-full object-cover ring-2 ring-primary/40 hover:ring-primary/80 transition neon-glow-sm"
             />
           ) : (
             <Flag
-              code={profile.country_code}
+              code={displayProfile.country_code}
               size={32}
               className="ring-2 ring-primary/40 hover:ring-primary/80 transition rounded-full"
             />
@@ -90,15 +98,15 @@ export function ProfileDropdown() {
           {/* Header con información de usuario */}
           <div className="flex items-center gap-3 px-1 py-1">
             <div className="relative shrink-0">
-              {profile ? (
-                profile.avatar_url ? (
+              {displayProfile ? (
+                displayProfile.avatar_url ? (
                   <img
-                    src={profile.avatar_url}
+                    src={displayProfile.avatar_url}
                     alt="Avatar"
                     className="h-10 w-10 rounded-full object-cover ring-2 ring-white/10"
                   />
                 ) : (
-                  <Flag code={profile.country_code} size={36} className="ring-2 ring-white/10" />
+                  <Flag code={displayProfile.country_code} size={36} className="ring-2 ring-white/10" />
                 )
               ) : (
                 <div className="grid h-10 w-10 place-items-center rounded-full bg-white/10 ring-2 ring-white/10">
@@ -108,10 +116,10 @@ export function ProfileDropdown() {
             </div>
             <div className="flex flex-col min-w-0">
               <span className="font-display text-sm font-bold text-white truncate">
-                {displayProfile.full_name}
+                {finalProfile.full_name}
               </span>
               <span className="text-[10px] text-white/50 truncate">
-                @{displayProfile.username}
+                @{finalProfile.username}
               </span>
             </div>
           </div>

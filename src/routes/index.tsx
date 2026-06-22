@@ -55,6 +55,14 @@ function HomePage() {
 
   const { user, profile } = useAuth();
   const { open: openSidebar } = useSidebar();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const displayUser = mounted ? user : null;
+  const displayProfile = mounted ? profile : null;
 
   const matchesList = apiData?.matches || matches;
   const stats = calculateUserStats(matchesList, profile?.country_code);
@@ -136,12 +144,12 @@ function HomePage() {
               </div>
             </div>
              <div className="flex items-center gap-3">
-              {user && (
-                !profile ? (
+              {displayUser && (
+                !displayProfile ? (
                   <div className="h-8 w-16 animate-pulse rounded-full bg-white/10" />
                 ) : (
                   <div className="glass flex items-center gap-2 rounded-full px-3 py-1.5">
-                    <Flag code={profile.country_code} size={22} />
+                    <Flag code={displayProfile.country_code} size={22} />
                     <span className="text-xs font-semibold">#{userRank}</span>
                   </div>
                 )
