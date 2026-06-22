@@ -21,6 +21,31 @@ if (!cleanUrl || !supabaseAnonKey) {
   );
 }
 
+const minifySession = (valueStr: string): string => {
+  try {
+    const session = JSON.parse(valueStr);
+    if (session && session.access_token && session.refresh_token) {
+      const minified: any = {
+        access_token: session.access_token,
+        refresh_token: session.refresh_token,
+        expires_at: session.expires_at,
+        expires_in: session.expires_in,
+        token_type: session.token_type,
+      };
+      if (session.user) {
+        minified.user = {
+          id: session.user.id,
+          email: session.user.email,
+        };
+      }
+      return JSON.stringify(minified);
+    }
+  } catch (e) {
+    console.warn("[Cookie Sync] Error minificando sesión para cookies:", e);
+  }
+  return valueStr;
+};
+
 const hybridStorage = {
   getItem: (key: string): string | null => {
     if (typeof window === "undefined") return null;
@@ -46,16 +71,24 @@ const hybridStorage = {
     if (typeof window === "undefined") return;
     try { localStorage.setItem(key, value); } catch {}
     try {
+      let cookieValue = value;
+      if (key.startsWith("sb-") && key.endsWith("-auth-token")) {
+        cookieValue = minifySession(value);
+      }
       const date = new Date();
       date.setTime(date.getTime() + (365 * 24 * 60 * 60 * 1000));
-      document.cookie = `${encodeURIComponent(key)}=${encodeURIComponent(value)}; expires=${date.toUTCString()}; path=/; SameSite=Lax; Secure`;
+      const isHttps = window.location.protocol === "https:";
+      const secureAttr = isHttps ? "; Secure" : "";
+      document.cookie = `${encodeURIComponent(key)}=${encodeURIComponent(cookieValue)}; expires=${date.toUTCString()}; path=/; SameSite=Lax${secureAttr}`;
     } catch {}
   },
   removeItem: (key: string): void => {
     if (typeof window === "undefined") return;
     try { localStorage.removeItem(key); } catch {}
     try {
-      document.cookie = `${encodeURIComponent(key)}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; SameSite=Lax; Secure`;
+      const isHttps = window.location.protocol === "https:";
+      const secureAttr = isHttps ? "; Secure" : "";
+      document.cookie = `${encodeURIComponent(key)}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; SameSite=Lax${secureAttr}`;
     } catch {}
   }
 };

@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { Share2, LogOut, Lock, Mail, User as UserIcon, Flag as FlagIcon, Eye, EyeOff, ChevronRight, Trophy, Menu, BookOpen, ShieldCheck } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { useState, useRef } from "react";
@@ -28,6 +28,7 @@ export const Route = createFileRoute("/profile")({
 
 function ProfilePage() {
   const { user, profile, loading, refreshProfile } = useAuth();
+  const navigate = useNavigate();
   const { open: openSidebar } = useSidebar();
   const [tab, setTab] = useState<"login" | "register" | "forgot">("login");
   const [email, setEmail] = useState("");
@@ -83,6 +84,7 @@ function ProfilePage() {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) throw error;
       toast.success("¡Sesión iniciada con éxito!");
+      navigate({ to: "/" });
     } catch (err: any) {
       toast.error("Error al iniciar sesión: " + (err.message || err));
     } finally {
@@ -102,7 +104,7 @@ function ProfilePage() {
     }
     setSubmitting(true);
     try {
-      const { error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
@@ -114,8 +116,14 @@ function ProfilePage() {
         },
       });
       if (error) throw error;
-      toast.success("¡Cuenta creada! Ya puedes iniciar sesión con tus credenciales.");
-      setTab("login");
+      
+      if (data?.session) {
+        toast.success("¡Cuenta creada y sesión iniciada!");
+        navigate({ to: "/" });
+      } else {
+        toast.success("¡Cuenta creada! Ya puedes iniciar sesión con tus credenciales.");
+        setTab("login");
+      }
     } catch (err: any) {
       toast.error("Error al registrarse: " + (err.message || err));
     } finally {

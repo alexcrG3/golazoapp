@@ -23,21 +23,43 @@ type AuthContextType = {
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
-// Función síncrona para obtener el usuario de localStorage al inicio
+// Función síncrona para obtener el usuario de localStorage o cookies al inicio
 const getInitialUser = (): User | null => {
   if (typeof window === "undefined") return null;
   try {
+    // 1. Intentar leer de localStorage
     const keys = Object.keys(localStorage);
     const authKey = keys.find(k => k.startsWith("sb-") && k.endsWith("-auth-token"));
+    let item: string | null = null;
+    
     if (authKey) {
-      const item = localStorage.getItem(authKey);
-      if (item) {
-        const parsed = JSON.parse(item);
-        return parsed?.user || null;
+      item = localStorage.getItem(authKey);
+    }
+    
+    // 2. Si no se encontró, intentar leer de cookies
+    if (!item) {
+      const cookies = document.cookie.split(";");
+      for (let i = 0; i < cookies.length; i++) {
+        const c = cookies[i].trim();
+        const eqIdx = c.indexOf("=");
+        if (eqIdx > 0) {
+          const k = decodeURIComponent(c.substring(0, eqIdx).trim());
+          if (k.startsWith("sb-") && k.endsWith("-auth-token")) {
+            item = decodeURIComponent(c.substring(eqIdx + 1).trim());
+            // Sincronizar a localStorage para que el cliente de Supabase lo detecte inmediatamente
+            try { localStorage.setItem(k, item); } catch {}
+            break;
+          }
+        }
       }
     }
+
+    if (item) {
+      const parsed = JSON.parse(item);
+      return parsed?.user || null;
+    }
   } catch (e) {
-    console.warn("[Auth] Error leyendo sesión inicial de localStorage:", e);
+    console.warn("[Auth] Error leyendo sesión inicial:", e);
   }
   return null;
 };
@@ -118,19 +140,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     let active = true;
 
-    // 1. Suscribirse a cambios de auth
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (!active) return;
       console.log("[Auth Event]:", event);
 
-      if (event === "SIGNED_OUT" && !initializedRef.current) {
-        console.log("[Auth] Ignorando SIGNED_OUT durante la hidratación inicial");
+      const currentUser = session?.user ?? null;
+
+      // Si aún no hemos completado la carga inicial (getSession) y el evento es nulo (sin usuario),
+      // ignoramos el evento para no desloguear transitoriamente el estado síncrono inicial.
+      if (!currentUser && !initializedRef.current) {
+        console.log("[Auth] Ignorando deslogueo/sesión nula durante la hidratación inicial, evento:", event);
         return;
       }
 
-      const currentUser = session?.user ?? null;
       setUser(currentUser);
 
       if (currentUser) {
