@@ -4,6 +4,18 @@ Historial cronológico de cambios, mejoras y actualizaciones de la quiniela **Go
 
 ---
 
+### [2026-06-22 10:28] Persistencia de Sesión Híbrida (Cookies + LocalStorage) y Estilos de Autocompletado
+- **Descripción:** Se solucionó el problema de pérdida de sesión al cerrar la app/PWA y la visibilidad del botón de revelar contraseña.
+- **Detalles:**
+  * **Persistencia Híbrida (`supabase.ts`):** Implementamos un adaptador de almacenamiento híbrido (`hybridStorage`) para el cliente de Supabase. Escribe la sesión tanto en `localStorage` como en `document.cookie` (con vigencia de 365 días). Esto soluciona de raíz la pérdida de sesión en entornos de PWA en iOS/Android o navegadores que limpian el almacenamiento local al cerrar pestañas, recuperando la sesión desde las cookies persistentes.
+  * **Visibilidad del Ojo de Contraseña (`styles.css`):**
+    - Se ocultaron por CSS los botones de revelación de contraseña nativos del navegador (Edge `::-ms-reveal` y Webkit autocompletado), que colisionaban visualmente con el icono del ojo de la interfaz.
+    - Se sobrescribieron los estilos de autocompletado de los navegadores (Webkit Autofill), manteniendo el fondo oscuro de la quiniela (`oklch(0.14 0.02 250)`) y el color de texto blanco. Esto previene que el navegador pinte el input de color azul/celeste brillante, permitiendo ver con claridad el botón de ojo de Lucide (`text-white/70`).
+- **Archivos modificados:**
+  * [supabase.ts](file:///d:/AntigravitDev/golazo-main/src/lib/supabase.ts)
+  * [styles.css](file:///d:/AntigravitDev/golazo-main/src/styles.css)
+
+
 ### [2026-06-22 10:15] Filtro de Países Clasificados al Mundial 2026 en Selectores
 - **Descripción:** Se filtraron los listados de selecciones para mostrar únicamente los 48 equipos oficialmente clasificados al Mundial 2026.
 - **Detalles:**
