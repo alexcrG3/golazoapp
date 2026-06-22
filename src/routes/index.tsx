@@ -70,17 +70,21 @@ function HomePage() {
     : "--";
 
   const featured = nextMatch(matchesList);
-  const upcoming = upcomingMatches(3, matchesList);
   const { format } = useTimeFormat();
   const localChampionCode = useChampion();
   const championCode = localChampionCode || profile?.country_code || null;
   const champion = championCode ? teamByCode(championCode) : null;
 
   // Hoy: matches del día actual del dispositivo
+  const todayMatches = matchesList.filter((m) => isSameDay(m.kickoff));
   const [today, setToday] = useState<typeof matches>([]);
   useEffect(() => {
-    setToday(matchesList.filter((m) => isSameDay(m.kickoff)));
+    setToday(todayMatches);
   }, [matchesList]);
+
+  const upcoming = upcomingMatches(undefined, matchesList)
+    .filter((m) => !todayMatches.some((t) => t.id === m.id))
+    .slice(0, 3);
 
   const { h, m, s } = useCountdown(featured.kickoff);
   const featuredPrediction = usePrediction(featured.id);
