@@ -9,7 +9,7 @@ import { calculateUserStats, predictionsStore } from "@/lib/predictionsStore";
 import { getDynamicLeaderboard } from "@/data/leaderboard";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/lib/supabase";
-import { teams } from "@/data/teams";
+import { allGroupTeams } from "@/data";
 import { groups as staticGroups } from "@/data/groups";
 import { matches as staticMatches } from "@/data/matches";
 import { toast } from "sonner";
@@ -412,7 +412,7 @@ function ProfilePage() {
                       onChange={(e) => setCountryCode(e.target.value)}
                       className="w-full rounded-2xl bg-[#11171d] py-3 pl-11 pr-4 text-sm text-white ring-1 ring-white/10 focus:outline-none focus:ring-2 focus:ring-primary transition appearance-none"
                     >
-                      {teams
+                      {allGroupTeams()
                         .sort((a, b) => a.name.localeCompare(b.name))
                         .map((team) => (
                           <option key={team.code} value={team.code} className="bg-background">

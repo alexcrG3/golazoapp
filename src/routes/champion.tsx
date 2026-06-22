@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Trophy, Check, ArrowLeft, Search } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { Flag } from "@/components/Flag";
-import { teams, teamByCode } from "@/data";
+import { allGroupTeams, teamByCode } from "@/data";
 import { predictionsStore, useChampion } from "@/lib/predictionsStore";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -25,7 +25,7 @@ function ChampionPage() {
   const [query, setQuery] = useState("");
   const [confirming, setConfirming] = useState<string | null>(null);
 
-  const filtered = teams
+  const filtered = allGroupTeams()
     .filter((t) =>
       t.name.toLowerCase().includes(query.toLowerCase()) ||
       t.short.toLowerCase().includes(query.toLowerCase())
