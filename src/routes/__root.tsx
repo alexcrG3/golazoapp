@@ -12,6 +12,7 @@ import type { ReactNode } from "react";
 import appCss from "../styles.css?url";
 import { TimeFormatProvider } from "@/contexts/TimeFormat";
 import { SidebarProvider } from "@/contexts/SidebarContext";
+import { AuthProvider } from "@/hooks/useAuth";
 
 function NotFoundComponent() {
   return (
@@ -135,13 +136,15 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <TimeFormatProvider>
-        <SidebarProvider>
-          {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
-          <Outlet />
-          <Toaster position="top-center" theme="dark" closeButton richColors />
-        </SidebarProvider>
-      </TimeFormatProvider>
+      <AuthProvider>
+        <TimeFormatProvider>
+          <SidebarProvider>
+            {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
+            <Outlet />
+            <Toaster position="top-center" theme="dark" closeButton richColors />
+          </SidebarProvider>
+        </TimeFormatProvider>
+      </AuthProvider>
     </QueryClientProvider>
   );
 }
