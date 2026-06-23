@@ -1,5 +1,8 @@
 import { predictionsStore, calculateMatchPoints, isPredictionExact, isPredictionCorrect } from "@/lib/predictionsStore";
 import { supabase } from "@/lib/supabase";
+import { teams } from "@/data/teams";
+
+const sortedTeamCodes = [...teams].map((t) => t.code).sort();
 
 export type LeaderboardEntry = {
   rank: number;
@@ -206,9 +209,12 @@ export async function getSupabaseLeaderboard(
       }
 
       // Puntos por acertar el campeón
-      const isYou = profile.id === currentUserId;
-      let championCode = profile.country_code;
-      if (isYou) {
+      const dbChampionRow = userPreds.find((p) => p.match_id === "champion");
+      let championCode = null;
+      if (dbChampionRow) {
+        championCode = sortedTeamCodes[dbChampionRow.home_score] || null;
+      }
+      if (!championCode && profile.id === currentUserId) {
         const localChampion = predictionsStore.getChampion();
         if (localChampion) {
           championCode = localChampion;

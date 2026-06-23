@@ -3,9 +3,13 @@ import { useState } from "react";
 import { Trophy, Check, ArrowLeft, Search } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { Flag } from "@/components/Flag";
-import { allGroupTeams, teamByCode } from "@/data";
+import { allGroupTeams, teamByCode, teams } from "@/data";
 import { predictionsStore, useChampion } from "@/lib/predictionsStore";
 import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/lib/supabase";
+import { toast } from "sonner";
+
+const sortedTeamCodes = [...teams].map((t) => t.code).sort();
 
 export const Route = createFileRoute("/champion")({
   head: () => ({
@@ -18,7 +22,7 @@ export const Route = createFileRoute("/champion")({
 });
 
 function ChampionPage() {
-  const { profile } = useAuth();
+  const { user, profile } = useAuth();
   const localChampionCode = useChampion();
   const championCode = localChampionCode || profile?.country_code || null;
   const champion = championCode ? teamByCode(championCode) : null;
@@ -60,7 +64,22 @@ function ChampionPage() {
                 <div className="text-left">
                   <div className="font-display text-3xl text-gradient-gold">{champion.name}</div>
                   <button
-                    onClick={() => predictionsStore.setChampion(null)}
+                    onClick={async () => {
+                      predictionsStore.setChampion(null);
+                      if (user) {
+                        try {
+                          const { error } = await supabase
+                            .from("predictions")
+                            .delete()
+                            .eq("user_id", user.id)
+                            .eq("match_id", "champion");
+                          if (error) throw error;
+                          toast.info("Predicción de campeón eliminada");
+                        } catch (err) {
+                          console.error("Error al eliminar campeón de Supabase:", err);
+                        }
+                      }
+                    }}
                     className="text-[11px] font-semibold uppercase tracking-widest text-primary"
                   >
                     Cambiar predicción
@@ -95,10 +114,32 @@ function ChampionPage() {
           return (
             <button
               key={t.code}
-              onClick={() => {
+              onClick={async () => {
                 if (isConfirming) {
                   predictionsStore.setChampion(t.code);
                   setConfirming(null);
+                  if (user) {
+                    try {
+                      const teamIndex = sortedTeamCodes.indexOf(t.code);
+                      if (teamIndex !== -1) {
+                        const { error } = await supabase.from("predictions").upsert(
+                          {
+                            user_id: user.id,
+                            match_id: "champion",
+                            home_score: teamIndex,
+                            away_score: 0,
+                            updated_at: new Date().toISOString(),
+                          },
+                          { onConflict: "user_id,match_id" }
+                        );
+                        if (error) throw error;
+                        toast.success(`¡Elegiste a ${t.name} como Campeón Mundial!`);
+                      }
+                    } catch (err) {
+                      console.error("Error al guardar campeón en Supabase:", err);
+                      toast.error("Error al sincronizar tu campeón en el ranking");
+                    }
+                  }
                 } else {
                   setConfirming(t.code);
                 }

@@ -3,6 +3,9 @@ import { createContext, useContext, useEffect, useRef, useState, type ReactNode 
 import { supabase } from "@/lib/supabase";
 import type { User } from "@supabase/supabase-js";
 import { predictionsStore } from "@/lib/predictionsStore";
+import { teams } from "@/data/teams";
+
+const sortedTeamCodes = [...teams].map((t) => t.code).sort();
 
 export type Profile = {
   id: string;
@@ -120,13 +123,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const map: Record<string, { home: number; away: number }> = {};
       if (dbPreds) {
         dbPreds.forEach((p) => {
-          map[p.match_id] = { home: p.home_score, away: p.away_score };
+          if (p.match_id !== "champion") {
+            map[p.match_id] = { home: p.home_score, away: p.away_score };
+          }
         });
       }
 
       const toUpload: { user_id: string; match_id: string; home_score: number; away_score: number }[] = [];
       Object.entries(local).forEach(([matchId, p]) => {
-        if (!map[matchId]) {
+        if (matchId !== "champion" && !map[matchId]) {
           map[matchId] = p;
           toUpload.push({
             user_id: userId,
@@ -139,10 +144,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (toUpload.length > 0) {
         console.log("[Auth Sync] Subiendo predicciones locales a Supabase:", toUpload.length);
-        await supabase.from("predictions").upsert(toUpload);
+        await supabase.from("predictions").upsert(toUpload, { onConflict: "user_id,match_id" });
       }
 
       predictionsStore.setAll(map);
+
+      // Sincronizar predicción de Campeón Mundial
+      const localChampion = predictionsStore.getChampion();
+      const dbChampionRow = dbPreds?.find((p) => p.match_id === "champion");
+
+      if (dbChampionRow) {
+        const decodedCode = sortedTeamCodes[dbChampionRow.home_score] || null;
+        if (decodedCode) {
+          predictionsStore.setChampion(decodedCode);
+        }
+      } else if (localChampion) {
+        const teamIndex = sortedTeamCodes.indexOf(localChampion);
+        if (teamIndex !== -1) {
+          await supabase.from("predictions").upsert(
+            {
+              user_id: userId,
+              match_id: "champion",
+              home_score: teamIndex,
+              away_score: 0,
+              updated_at: new Date().toISOString(),
+            },
+            { onConflict: "user_id,match_id" }
+          );
+        }
+      }
     } catch (err) {
       console.error("[Auth Sync] Error al sincronizar predicciones con Supabase:", err);
     }
