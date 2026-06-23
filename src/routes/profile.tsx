@@ -26,6 +26,17 @@ export const Route = createFileRoute("/profile")({
   component: ProfilePage,
 });
 
+const getAuthErrorMessage = (err: any): string => {
+  const msg = err?.message || String(err);
+  if (msg.toLowerCase().includes("rate limit exceeded") || msg.toLowerCase().includes("limite de tasa")) {
+    return "Has realizado demasiadas solicitudes seguidas. Por seguridad, por favor espera 1 minuto antes de volver a intentarlo.";
+  }
+  if (msg.toLowerCase().includes("invalid login credentials")) {
+    return "Credenciales incorrectas. Verifica tu correo y contraseña.";
+  }
+  return msg;
+};
+
 function ProfilePage() {
   const { user, profile, loading, refreshProfile } = useAuth();
   const navigate = useNavigate();
@@ -93,7 +104,7 @@ function ProfilePage() {
       toast.success("¡Sesión iniciada con éxito!");
       navigate({ to: "/" });
     } catch (err: any) {
-      toast.error("Error al iniciar sesión: " + (err.message || err));
+      toast.error("Error al iniciar sesión: " + getAuthErrorMessage(err));
     } finally {
       setSubmitting(false);
     }
@@ -132,7 +143,7 @@ function ProfilePage() {
         setTab("login");
       }
     } catch (err: any) {
-      toast.error("Error al registrarse: " + (err.message || err));
+      toast.error("Error al registrarse: " + getAuthErrorMessage(err));
     } finally {
       setSubmitting(false);
     }
@@ -162,7 +173,7 @@ function ProfilePage() {
       toast.success("¡Correo de recuperación enviado! Revisa tu bandeja de entrada.");
       setTab("login");
     } catch (err: any) {
-      toast.error("Error al enviar el correo: " + (err.message || err));
+      toast.error("Error al enviar el correo: " + getAuthErrorMessage(err));
     } finally {
       setSubmitting(false);
     }
@@ -181,7 +192,7 @@ function ProfilePage() {
       toast.success("¡Contraseña actualizada con éxito!");
       setNewPassword("");
     } catch (err: any) {
-      toast.error("Error al actualizar la contraseña: " + (err.message || err));
+      toast.error("Error al actualizar la contraseña: " + getAuthErrorMessage(err));
     } finally {
       setSubmittingPassword(false);
     }
