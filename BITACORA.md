@@ -3,6 +3,21 @@
 Historial cronológico de cambios, mejoras y actualizaciones de la quiniela **Golazo (Mundial 2026)**. Los cambios más recientes se muestran al principio.
 
 ---
+### [2026-06-22 23:33] Corrección de Bandera de Campeón, Caché de Avatar y Traducción de Errores de Autenticación
+- **Descripción:** Se resolvieron los bugs visuales del indicador de posición, el retraso del caché al subir foto de perfil, y se amigabilizó el error de límite de correos.
+- **Detalles:**
+  * **Bandera de Campeón en Ranking del Top Bar (`index.tsx`):** Se corrigió un error tipográfico donde se utilizaba la variable inexistente `localChampion` en lugar de `localChampionCode`. Esto causaba que la bandera junto al puesto de clasificación (ej. `#3`) siempre recayera en la del país de origen del perfil en lugar de la del campeón predicho.
+  * **Busto de Caché de CDN al Subir Avatar (`profile.tsx`):** 
+    - Ahora, al subir una nueva foto de perfil, se genera un nombre de archivo único utilizando la marca de tiempo (`avatar_[timestamp].ext`), lo que obliga a la CDN (Cloudflare/Supabase Storage) y al navegador a recargar la nueva imagen de inmediato en lugar de servir la antigua cacheada.
+    - Se agregó una subrutina para listar y eliminar los archivos de avatar previos del usuario en el storage antes de subir la nueva foto, evitando acumular archivos innecesarios.
+  * **Traducción y Control de Errores en Auth (`profile.tsx`):**
+    - Se implementó un formateador de errores `getAuthErrorMessage` para interceptar mensajes técnicos en inglés de Supabase Auth.
+    - El error `"Email rate limit exceeded"` (provocado por el límite de Supabase de 1 correo por minuto) ahora se muestra en español amigable: *"Has realizado demasiadas solicitudes seguidas. Por seguridad, por favor espera 1 minuto antes de volver a intentarlo."*
+    - Se tradujo también el error de credenciales incorrectas.
+- **Archivos modificados:**
+  * [index.tsx](file:///d:/AntigravitDev/golazo-main/src/routes/index.tsx)
+  * [profile.tsx](file:///d:/AntigravitDev/golazo-main/src/routes/profile.tsx)
+
 
 ### [2026-06-22 10:28] Persistencia de Sesión Híbrida (Cookies + LocalStorage) y Estilos de Autocompletado
 - **Descripción:** Se solucionó el problema de pérdida de sesión al cerrar la app/PWA y la visibilidad del botón de revelar contraseña.
