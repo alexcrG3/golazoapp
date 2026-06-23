@@ -149,7 +149,7 @@ function HomePage() {
                   <div className="h-8 w-16 animate-pulse rounded-full bg-white/10" />
                 ) : (
                   <div className="glass flex items-center gap-2 rounded-full px-3 py-1.5">
-                    <Flag code={displayProfile.country_code} size={22} />
+                    <Flag code={localChampion || displayProfile.country_code || "cr"} size={22} />
                     <span className="text-xs font-semibold">#{userRank}</span>
                   </div>
                 )

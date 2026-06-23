@@ -85,8 +85,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     profileRef.current = profile;
   }, [profile]);
 
-  const fetchProfile = async (userId: string) => {
-    if (profileRef.current && profileRef.current.id === userId) return;
+  const fetchProfile = async (userId: string, force = false) => {
+    if (!force && profileRef.current && profileRef.current.id === userId) return;
     if (fetchingProfileRef.current === userId) return;
     fetchingProfileRef.current = userId;
     try {
@@ -242,7 +242,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const refreshProfile = async () => {
     if (user) {
-      await fetchProfile(user.id);
+      await fetchProfile(user.id, true);
     }
   };
 
