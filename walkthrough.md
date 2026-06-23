@@ -49,6 +49,13 @@ Se han implementado y verificado las siguientes mejoras en la quiniela **Golazo 
 - **Funcionamiento:** Al hacer clic sobre el indicador parpadeante de "En Vivo 📺" o "En Juego 📺", se abre una pestaña en el navegador con una búsqueda optimizada de Google (por ejemplo, `ver [Equipo A] vs [Equipo B] en vivo online gratis`).
 - **Beneficio:** Esta búsqueda se localiza geográficamente de manera automática según la ubicación del usuario, listando de forma instantánea los canales y opciones de streaming disponibles (gratuitas y oficiales) para ver el partido en vivo.
 
+## 10. Corrección del Indicador de Bandera en la Clasificación del Top Bar (`index.tsx`)
+- **Problema:** En el App Bar de la pantalla de Inicio, junto al indicador de posición global del usuario (ej. `#3`), se mostraba incorrectamente la bandera de la Selección Favorita del usuario (Costa Rica en el caso de Ghiuliana) en lugar de la bandera de la predicción elegida para Campeón Mundial (Francia).
+- **Solución:** Corregimos un error tipográfico en `src/routes/index.tsx` donde se usaba la variable inexistente `localChampion` (evaluando a `undefined` y cayendo en el fallback de país) y la reemplazamos por la variable correcta `localChampionCode` provista por el hook `useChampion()`. Ahora muestra la bandera de la selección elegida para campeonar (Francia), o cae en la del perfil si aún no define campeón.
 
-
-
+## 11. Busto de Caché de CDN para Subida de Avatar (`profile.tsx`)
+- **Problema:** Al actualizar la foto de perfil (avatar) desde la pantalla de Perfil, los cambios no se reflejaban de inmediato y se seguía viendo la bandera por defecto en el top bar y barra de navegación, debido al caché en la red de entrega de contenido (CDN/Cloudflare) de Supabase Storage que ignoraba el query param de tiempo cuando el nombre de archivo era el mismo (`avatar.jpg`).
+- **Solución:** Modificamos la función `handleAvatarUpload` en `src/routes/profile.tsx` para:
+  1. Limpiar/eliminar todos los archivos de avatar anteriores que el usuario tenga en storage para evitar acumular basura.
+  2. Generar un nombre de archivo único con marca de tiempo (`avatar_[timestamp].ext`) al guardar en Supabase Storage, forzando al CDN a saltarse el caché al cambiar de ruta o actualizar.
+  3. Ejecutar correctamente `refreshProfile()` de manera síncrona en el estado para actualizar todas las vistas de inmediato sin necesidad de recargar la página.
