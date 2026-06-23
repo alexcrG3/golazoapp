@@ -204,24 +204,38 @@ function ProfilePage() {
     setUploadingAvatar(true);
     try {
       const ext = file.name.split(".").pop();
-      const filePath = `${user.id}/avatar.${ext}`;
+      const timestamp = Date.now();
+      const filePath = `${user.id}/avatar_${timestamp}.${ext}`;
 
-      // Subir al bucket 'avatars'
+      // 1. Clean up old avatar files in storage for this user to save space
+      try {
+        const { data: filesList } = await supabase.storage
+          .from("avatars")
+          .list(user.id);
+        if (filesList && filesList.length > 0) {
+          const filesToDelete = filesList.map((f) => `${user.id}/${f.name}`);
+          await supabase.storage.from("avatars").remove(filesToDelete);
+        }
+      } catch (cleanupErr) {
+        console.warn("No se pudieron limpiar los archivos de avatar anteriores:", cleanupErr);
+      }
+
+      // 2. Upload the new file to 'avatars' bucket
       const { error: uploadError } = await supabase.storage
         .from("avatars")
         .upload(filePath, file, { upsert: true });
 
       if (uploadError) throw uploadError;
 
-      // Obtener URL pública
+      // 3. Get public URL
       const { data: { publicUrl } } = supabase.storage
         .from("avatars")
         .getPublicUrl(filePath);
 
-      // Guardar en profiles
+      // 4. Update profiles table in Supabase
       const { error: updateError } = await supabase
         .from("profiles")
-        .update({ avatar_url: publicUrl + `?t=${Date.now()}` })
+        .update({ avatar_url: publicUrl + `?t=${timestamp}` })
         .eq("id", user.id);
 
       if (updateError) throw updateError;
