@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { Share2, LogOut, Lock, Mail, User as UserIcon, Flag as FlagIcon, Eye, EyeOff, ChevronRight, Trophy, Menu, BookOpen, ShieldCheck } from "lucide-react";
+import { Share2, LogOut, Lock, Mail, User as UserIcon, Flag as FlagIcon, Eye, EyeOff, ChevronRight, Trophy, Menu, BookOpen, ShieldCheck, Pencil } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { useState, useRef } from "react";
 import { AppShell } from "@/components/AppShell";
@@ -43,6 +43,13 @@ function ProfilePage() {
   const [showPassword, setShowPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const avatarInputRef = useRef<HTMLInputElement>(null);
+
+  // Estados para la edición de perfil
+  const [isEditing, setIsEditing] = useState(false);
+  const [editFullName, setEditFullName] = useState("");
+  const [editUsername, setEditUsername] = useState("");
+  const [editCountryCode, setEditCountryCode] = useState("cr");
+  const [savingProfile, setSavingProfile] = useState(false);
 
   const { data: apiData } = useQuery({
     queryKey: ["realMatchesAndGroups"],
@@ -228,6 +235,49 @@ function ProfilePage() {
       setUploadingAvatar(false);
       // Limpiar input para permitir re-subir la misma imagen
       if (avatarInputRef.current) avatarInputRef.current.value = "";
+    }
+  };
+
+  const handleOpenEdit = () => {
+    setEditFullName(profile?.full_name || user?.email?.split("@")[0] || "");
+    setEditUsername(profile?.username || user?.email?.split("@")[0] || "");
+    setEditCountryCode(profile?.country_code || "cr");
+    setIsEditing(true);
+  };
+
+  const handleSaveProfile = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user) return;
+
+    const cleanUsername = editUsername.toLowerCase().replace(/[^a-z0-9_.]/g, "").trim();
+    const cleanFullName = editFullName.trim();
+
+    if (!cleanFullName || !cleanUsername) {
+      toast.error("El nombre completo y nombre de usuario son requeridos.");
+      return;
+    }
+
+    setSavingProfile(true);
+    try {
+      const { error: updateError } = await supabase
+        .from("profiles")
+        .update({
+          full_name: cleanFullName,
+          username: cleanUsername,
+          country_code: editCountryCode,
+        })
+        .eq("id", user.id);
+
+      if (updateError) throw updateError;
+
+      await refreshProfile();
+      toast.success("¡Perfil actualizado con éxito!");
+      setIsEditing(false);
+    } catch (err: any) {
+      console.error(err);
+      toast.error("Error al actualizar el perfil: " + (err.message || err));
+    } finally {
+      setSavingProfile(false);
     }
   };
 
@@ -581,9 +631,17 @@ function ProfilePage() {
           <h1 className="font-display mt-5 text-4xl leading-none text-white">{displayProfile.full_name}</h1>
           <p className="mt-1 text-sm text-white/55">@{displayProfile.username} · Cuenta Sincronizada</p>
 
-          <button className="mt-4 inline-flex items-center gap-2 rounded-full bg-white px-5 py-2 text-xs font-bold uppercase tracking-widest text-black active:scale-95">
-            <Share2 className="h-3.5 w-3.5" /> Compartir Perfil
-          </button>
+          <div className="mt-4 flex items-center gap-3">
+            <button
+              onClick={handleOpenEdit}
+              className="inline-flex items-center gap-2 rounded-full bg-white/10 border border-white/15 px-5 py-2 text-xs font-bold uppercase tracking-widest text-white hover:bg-white/20 active:scale-95 transition"
+            >
+              <Pencil className="h-3.5 w-3.5 text-primary" /> Editar Perfil
+            </button>
+            <button className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-2 text-xs font-bold uppercase tracking-widest text-black active:scale-95 hover:bg-white/90 transition">
+              <Share2 className="h-3.5 w-3.5" /> Compartir
+            </button>
+          </div>
         </div>
       </section>
 
@@ -738,6 +796,86 @@ function ProfilePage() {
           </form>
         </div>
       </section>
+
+      {/* Modal de Editar Perfil */}
+      {isEditing && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
+          <div className="glass-strong w-full max-w-md overflow-hidden rounded-3xl p-6 relative border border-white/10 shadow-2xl">
+            <h3 className="font-display text-2xl text-white mb-1">Editar Perfil</h3>
+            <p className="text-xs text-white/50 mb-5">Actualiza tu nombre, usuario o selección favorita.</p>
+
+            <form onSubmit={handleSaveProfile} className="space-y-4">
+              <div className="space-y-1.5">
+                <label className="text-[10px] uppercase tracking-widest text-white/50 block font-semibold">Nombre Completo</label>
+                <div className="relative">
+                  <UserIcon className="absolute left-4 top-3.5 h-4 w-4 text-white/40" />
+                  <input
+                    type="text"
+                    value={editFullName}
+                    onChange={(e) => setEditFullName(e.target.value)}
+                    placeholder="ej. Alejandro Gómez"
+                    className="w-full rounded-2xl bg-white/5 py-3 pl-11 pr-4 text-sm text-white ring-1 ring-white/10 focus:outline-none focus:ring-2 focus:ring-primary transition"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-[10px] uppercase tracking-widest text-white/50 block font-semibold">Nombre de Usuario</label>
+                <div className="relative">
+                  <span className="absolute left-4 top-3 text-sm text-white/40">@</span>
+                  <input
+                    type="text"
+                    value={editUsername}
+                    onChange={(e) => setEditUsername(e.target.value)}
+                    placeholder="ej. alexg3"
+                    className="w-full rounded-2xl bg-white/5 py-3 pl-9 pr-4 text-sm text-white ring-1 ring-white/10 focus:outline-none focus:ring-2 focus:ring-primary transition"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-[10px] uppercase tracking-widest text-white/50 block font-semibold">Selección Favorita</label>
+                <div className="relative">
+                  <FlagIcon className="absolute left-4 top-3.5 h-4 w-4 text-white/40" />
+                  <select
+                    value={editCountryCode}
+                    onChange={(e) => setEditCountryCode(e.target.value)}
+                    className="w-full rounded-2xl bg-[#11171d] py-3 pl-11 pr-4 text-sm text-white ring-1 ring-white/10 focus:outline-none focus:ring-2 focus:ring-primary transition appearance-none"
+                  >
+                    {allGroupTeams()
+                      .sort((a, b) => a.name.localeCompare(b.name))
+                      .map((team) => (
+                        <option key={team.code} value={team.code} className="bg-[#0a0f14]">
+                          {team.name}
+                        </option>
+                      ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className="mt-6 flex items-center gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setIsEditing(false)}
+                  disabled={savingProfile}
+                  className="flex-1 rounded-2xl bg-white/5 border border-white/10 py-3 text-xs font-bold uppercase tracking-widest text-white hover:bg-white/10 transition active:scale-95 disabled:opacity-50"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  disabled={savingProfile}
+                  className="flex-1 rounded-2xl bg-primary py-3 text-xs font-bold uppercase tracking-widest text-primary-foreground transition active:scale-95 disabled:opacity-50 neon-glow"
+                >
+                  {savingProfile ? "Guardando..." : "Guardar Cambios"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </AppShell>
   );
 }
