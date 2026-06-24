@@ -67,6 +67,18 @@ const getInitialUser = (): User | null => {
   return null;
 };
 
+// Función síncrona para obtener el perfil previamente guardado en caché de localStorage
+const getInitialProfile = (): Profile | null => {
+  if (typeof window === "undefined") return null;
+  try {
+    const item = localStorage.getItem("sb-profile");
+    if (item) return JSON.parse(item);
+  } catch (e) {
+    console.warn("[Auth] Error leyendo perfil inicial:", e);
+  }
+  return null;
+};
+
 // Determina el estado de carga inicial según la presencia de sesión local
 const getInitialLoading = (): boolean => {
   if (typeof window === "undefined") return true;
@@ -75,7 +87,7 @@ const getInitialLoading = (): boolean => {
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(getInitialUser);
-  const [profile, setProfile] = useState<Profile | null>(null);
+  const [profile, setProfile] = useState<Profile | null>(getInitialProfile);
   const [loading, setLoading] = useState<boolean>(getInitialLoading);
   const initializedRef = useRef(false);
   const fetchingProfileRef = useRef<string | null>(null);
@@ -90,21 +102,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (fetchingProfileRef.current === userId) return;
     fetchingProfileRef.current = userId;
     try {
-      const { data, error } = await supabase
+      const fetchPromise = supabase
         .from("profiles")
         .select("*")
         .eq("id", userId)
         .single();
 
-      if (error) {
-        console.warn("[Auth] No se encontró el perfil en la base de datos:", error.message);
-        setProfile(null);
-      } else {
-        setProfile(data);
+      // Timeout de 5 segundos para que la app responda rápido y no se cuelgue sin conexión
+      const timeoutPromise = new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error("Timeout")), 5000)
+      );
+
+      const res = await Promise.race([fetchPromise, timeoutPromise]) as any;
+
+      if (res.error) {
+        console.warn("[Auth] No se encontró el perfil en la base de datos:", res.error.message);
+        // Si no hay perfil cargado en absoluto, limpiamos
+        if (!profileRef.current) {
+          setProfile(null);
+        }
+      } else if (res.data) {
+        setProfile(res.data);
+        try {
+          localStorage.setItem("sb-profile", JSON.stringify(res.data));
+        } catch {}
       }
     } catch (err) {
-      console.error("[Auth] Error al obtener perfil de Supabase:", err);
-      setProfile(null);
+      console.error("[Auth] Error al obtener perfil de Supabase o Timeout:", err);
+      // Mantenemos el perfil que ya estaba en caché para no pintar un estado vacío al usuario
     } finally {
       fetchingProfileRef.current = null;
     }
@@ -210,6 +235,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setLoading(false);
       } else {
         setProfile(null);
+        try {
+          localStorage.removeItem("sb-profile");
+        } catch {}
         predictionsStore.clear();
         setLoading(false);
       }
@@ -226,6 +254,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (!currentUser) {
         setUser(null);
         setProfile(null);
+        try {
+          localStorage.removeItem("sb-profile");
+        } catch {}
         setLoading(false);
       } else {
         setUser(currentUser);
