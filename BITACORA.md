@@ -3,6 +3,17 @@
 Historial cronológico de cambios, mejoras y actualizaciones de la quiniela **Golazo (Mundial 2026)**. Los cambios más recientes se muestran al principio.
 
 ---
+### [2026-06-24 01:30] Corrección de Spinners Infinitos y Sesiones Suspendidas en PWA
+- **Descripción:** Se solucionó el problema por el cual la app se quedaba cargando indefinidamente al perder conexión o expirar la sesión, y se mejoró la persistencia de la sesión en PWAs.
+- **Detalles:**
+  * **Control de Spinner Infinito al Expirar Sesión (`useAuth.ts`):** En el detector de cambios de sesión de Supabase (`onAuthStateChange`), el estado `loading` se quedaba colgado en `true` si el token expiraba o el refresco fallaba y el evento no era explícitamente `"SIGNED_OUT"`. Cambiamos el condicional para forzar `setLoading(false)` ante cualquier evento que resulte en un usuario nulo, deteniendo los spinners "Cargando perfil..." y "Cargando clasificación..." de inmediato.
+  * **Prevención de Spinners Infinitos por Offline (`router.tsx`):** Por defecto, React Query pausa indefinidamente las peticiones en estado "loading" si detecta que el dispositivo está offline, manteniendo el spinner de carga para siempre en pantallas como Clasificación. Configurando `networkMode: "always"` a nivel global en el `QueryClient`, obligamos a las consultas a fallar inmediatamente en lugar de colgarse, permitiendo renderizar datos en caché u offline.
+  * **Mantenimiento y Refresco Activo de Sesión (`useAuth.ts`):** Agregamos escuchadores de eventos para enfoque de ventana (`focus`) y cambios de visibilidad (`visibilitychange`). Cuando la PWA/pestaña se reabre tras estar suspendida o en segundo plano, la app valida y refresca automáticamente los tokens de Supabase, evitando cierres de sesión por inactividad.
+- **Archivos modificados:**
+  * [useAuth.ts](file:///d:/AntigravitDev/golazo-main/src/hooks/useAuth.ts)
+  * [router.tsx](file:///d:/AntigravitDev/golazo-main/src/router.tsx)
+
+
 ### [2026-06-22 23:33] Corrección de Bandera de Campeón, Caché de Avatar y Traducción de Errores de Autenticación
 - **Descripción:** Se resolvieron los bugs visuales del indicador de posición, el retraso del caché al subir foto de perfil, y se amigabilizó el error de límite de correos.
 - **Detalles:**
