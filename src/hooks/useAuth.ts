@@ -208,7 +208,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         );
         await fetchProfile(currentUser.id);
         setLoading(false);
-      } else if (event === "SIGNED_OUT") {
+      } else {
         setProfile(null);
         predictionsStore.clear();
         setLoading(false);
@@ -237,6 +237,37 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => {
       active = false;
       subscription.unsubscribe();
+    };
+  }, []);
+
+  // Refrescar y validar sesión de Supabase al enfocar o volver a ver la pestaña/PWA
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const handleFocusOrVisible = async () => {
+      console.log("[Auth] App enfocada o visible, validando sesión...");
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+        if (error) throw error;
+        if (session) {
+          console.log("[Auth] Sesión activa confirmada al enfocar");
+        }
+      } catch (err) {
+        console.warn("[Auth] Error al validar sesión en foco:", err);
+      }
+    };
+
+    window.addEventListener("focus", handleFocusOrVisible);
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        handleFocusOrVisible();
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      window.removeEventListener("focus", handleFocusOrVisible);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
   }, []);
 
