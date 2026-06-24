@@ -17,6 +17,7 @@ export type LeaderboardEntry = {
   correctCount?: number;
   championPick?: string | null;
   maxStreak?: number;
+  predictions?: Record<string, { home: number; away: number }>;
 };
 
 const seed: Omit<LeaderboardEntry, "rank">[] = [
@@ -121,16 +122,19 @@ export function getDynamicLeaderboard(matchesList: any[]): LeaderboardEntry[] {
         correctCount: Math.max(0, correct - exact),
         maxStreak: exact,
         championPick: championCode,
+        predictions: userPredictions,
       };
     } else {
       let pts = 0;
       let correct = 0;
       let exact = 0;
       let finishedPreds = 0;
+      const mockPreds: Record<string, { home: number; away: number }> = {};
 
       for (const m of matchesList) {
         if (m.status === "finished") {
           const pred = getMockPrediction(player.name, m.id);
+          mockPreds[m.id] = pred;
           finishedPreds++;
           const matchPts = calculateMatchPoints(m, pred);
           pts += matchPts;
@@ -155,6 +159,7 @@ export function getDynamicLeaderboard(matchesList: any[]): LeaderboardEntry[] {
         correctCount: Math.max(0, correct - exact),
         maxStreak: Math.max(Math.min(5, Math.max(0, pts % 3)), exact),
         championPick: player.country,
+        predictions: mockPreds,
       };
     }
   });
@@ -181,6 +186,12 @@ export async function getSupabaseLeaderboard(
 
     const realEntries: LeaderboardEntry[] = (dbProfiles || []).map((profile) => {
       const userPreds = (dbPredictions || []).filter((p) => p.user_id === profile.id);
+      const predsRecord: Record<string, { home: number; away: number }> = {};
+      userPreds.forEach((p) => {
+        if (p.match_id !== "champion") {
+          predsRecord[p.match_id] = { home: p.home_score, away: p.away_score };
+        }
+      });
 
       let pts = 0;
       let correct = 0;
@@ -286,6 +297,7 @@ export async function getSupabaseLeaderboard(
         correctCount: Math.max(0, correct - exact),
         maxStreak: maxStreak,
         championPick: championCode,
+        predictions: predsRecord,
       };
     });
 

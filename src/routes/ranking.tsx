@@ -9,7 +9,7 @@ import { fetchRealGroupsAndMatches } from "@/lib/api-football";
 import { getDynamicLeaderboard, getSupabaseLeaderboard, getOtherPrizesStatus } from "@/data/leaderboard";
 import { useAuth } from "@/hooks/useAuth";
 import { useSidebar } from "@/contexts/SidebarContext";
-import { useChampion } from "@/lib/predictionsStore";
+import { useChampion, calculateMatchPoints, isPredictionExact, isPredictionCorrect } from "@/lib/predictionsStore";
 import { ProfileDropdown } from "@/components/ProfileDropdown";
 
 export const Route = createFileRoute("/ranking")({
@@ -194,7 +194,7 @@ function RankingPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
           <div className="glass-strong w-full max-w-sm rounded-3xl overflow-hidden relative border border-white/10 p-6 animate-in fade-in zoom-in duration-200">
             {/* Header / Info Personal */}
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between pb-3 border-b border-white/10">
               <div className="flex items-center gap-3 min-w-0">
                 <Flag code={selectedUser.country} size={48} className="ring-2 ring-white/10 shrink-0" />
                 <div className="min-w-0">
@@ -216,77 +216,164 @@ function RankingPage() {
               </button>
             </div>
 
-            {/* Puntuación */}
-            <div className="mt-6 bg-white/5 rounded-2xl p-4 border border-white/5 text-center">
-              <span className="text-[10px] font-bold uppercase tracking-widest text-white/40 block">Puntaje Total</span>
-              <span className="font-display text-4xl text-primary mt-1 block">
-                {selectedUser.points} pts
-              </span>
-            </div>
-
-            {/* Desglose de Puntos */}
-            <div className="mt-5 space-y-2.5">
-              <span className="text-[10px] font-bold uppercase tracking-widest text-white/40 block">Desglose de Puntos</span>
-              
-              <div className="flex justify-between items-center text-xs py-1.5 border-b border-white/5">
-                <span className="text-white/70 flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full bg-primary" /> Marcadores Exactos (+3 / +5 pts)
-                </span>
-                <span className="font-bold text-white">{selectedUser.exactCount || 0} partidos</span>
-              </div>
-              
-              <div className="flex justify-between items-center text-xs py-1.5 border-b border-white/5">
-                <span className="text-white/70 flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full bg-white/40" /> Ganadores Correctos (+1 / +3 pts)
-                </span>
-                <span className="font-bold text-white">{selectedUser.correctCount || 0} partidos</span>
-              </div>
-
-              <div className="flex justify-between items-center text-xs py-1.5">
-                <span className="text-white/70 flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full bg-[oklch(0.9_0.18_85)]" /> Predicción Campeón (+20 pts)
-                </span>
-                <span className="font-bold text-[oklch(0.9_0.18_85)] flex items-center gap-1">
-                  {selectedUser.championPick ? (
-                    <>
-                      <Flag code={selectedUser.championPick} size={16} />
-                      {teamByCode(selectedUser.championPick)?.name || selectedUser.championPick.toUpperCase()}
-                    </>
-                  ) : (
-                    "Sin Elegir"
-                  )}
+            {/* Scrollable body wrapper to fit small screens */}
+            <div className="mt-4 space-y-5 max-h-[58vh] overflow-y-auto pr-1 scrollbar-thin">
+              {/* Puntuación */}
+              <div className="bg-white/5 rounded-2xl p-4 border border-white/5 text-center">
+                <span className="text-[10px] font-bold uppercase tracking-widest text-white/40 block">Puntaje Total</span>
+                <span className="font-display text-4xl text-primary mt-1 block">
+                  {selectedUser.points} pts
                 </span>
               </div>
-            </div>
 
-            {/* Premios y Logros */}
-            <div className="mt-5 space-y-2.5">
-              <span className="text-[10px] font-bold uppercase tracking-widest text-white/40 block">Premios y Logros Ganados</span>
-              
-              <div className="flex items-center gap-3 p-2.5 rounded-xl bg-white/5 border border-white/5">
-                <span className="text-xl">🏅</span>
-                <div className="min-w-0">
-                  <span className="text-xs font-bold text-white block">Logro "Primer Gol" (Participación)</span>
-                  <span className="text-[10px] text-primary font-semibold">Calificado para todos los sorteos</span>
+              {/* Desglose de Puntos */}
+              <div className="space-y-2.5">
+                <span className="text-[10px] font-bold uppercase tracking-widest text-white/40 block">Desglose de Puntos</span>
+                
+                <div className="flex justify-between items-center text-xs py-1.5 border-b border-white/5">
+                  <span className="text-white/70 flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-primary" /> Marcadores Exactos (+3 / +5 pts)
+                  </span>
+                  <span className="font-bold text-white">{selectedUser.exactCount || 0} partidos</span>
+                </div>
+                
+                <div className="flex justify-between items-center text-xs py-1.5 border-b border-white/5">
+                  <span className="text-white/70 flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-white/40" /> Ganadores Correctos (+1 / +3 pts)
+                  </span>
+                  <span className="font-bold text-white">{selectedUser.correctCount || 0} partidos</span>
+                </div>
+
+                <div className="flex justify-between items-center text-xs py-1.5">
+                  <span className="text-white/70 flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-[oklch(0.9_0.18_85)]" /> Predicción Campeón (+20 pts)
+                  </span>
+                  <span className="font-bold text-[oklch(0.9_0.18_85)] flex items-center gap-1">
+                    {selectedUser.championPick ? (
+                      <>
+                        <Flag code={selectedUser.championPick} size={16} />
+                        {teamByCode(selectedUser.championPick)?.name || selectedUser.championPick.toUpperCase()}
+                      </>
+                    ) : (
+                      "Sin Elegir"
+                    )}
+                  </span>
                 </div>
               </div>
 
-              <div className="flex items-center gap-3 p-2.5 rounded-xl bg-white/5 border border-white/5">
-                <span className="text-xl">🎯</span>
-                <div className="min-w-0">
-                  <span className="text-xs font-bold text-white block">Logro "Hat-Trick" (Racha Activa)</span>
-                  {selectedUser.maxStreak && selectedUser.maxStreak >= 3 ? (
-                    <span className="text-[10px] text-[oklch(0.9_0.18_85)] font-bold">🏆 ¡Desbloqueado! Racha récord de {selectedUser.maxStreak}</span>
-                  ) : (
-                    <span className="text-[10px] text-white/45">No desbloqueado (Racha máx: {selectedUser.maxStreak || 0}/3)</span>
-                  )}
+              {/* Detalle de Puntos por Partido */}
+              <div className="space-y-2.5">
+                <span className="text-[10px] font-bold uppercase tracking-widest text-white/40 block">Puntos por Partido</span>
+                {(() => {
+                  const finishedMatches = matchesList.filter((m) => m.status === "finished");
+                  if (finishedMatches.length === 0) {
+                    return (
+                      <div className="text-xs text-white/40 italic text-center py-3 bg-white/5 rounded-xl border border-white/5">
+                        No hay partidos finalizados todavía.
+                      </div>
+                    );
+                  }
+                  
+                  // Mapear partidos con sus respectivos puntos y fechas para ordenamiento
+                  const sortedFinished = finishedMatches
+                    .map((m) => {
+                      const pred = selectedUser.predictions?.[m.id];
+                      const pts = pred ? calculateMatchPoints(m, pred) : 0;
+                      const dateStr = m.kickoff || m.date || "";
+                      return {
+                        match: m,
+                        pts,
+                        time: dateStr ? new Date(dateStr).getTime() : 0,
+                      };
+                    })
+                    .sort((a, b) => {
+                      const hasPtsA = a.pts > 0 ? 1 : 0;
+                      const hasPtsB = b.pts > 0 ? 1 : 0;
+                      if (hasPtsA !== hasPtsB) {
+                        return hasPtsB - hasPtsA; // Aquellos con puntos van arriba
+                      }
+                      return b.time - a.time; // Más nuevos primero dentro de cada grupo
+                    });
+
+                  return (
+                    <div className="space-y-1.5 max-h-[160px] overflow-y-auto pr-1 scrollbar-thin">
+                      {sortedFinished.map(({ match: m, pts }) => {
+                        const pred = selectedUser.predictions?.[m.id];
+                        const exact = pred ? isPredictionExact(m, pred) : false;
+
+                        return (
+                          <div key={m.id} className="flex items-center justify-between p-2 rounded-xl bg-white/5 border border-white/5 text-[11px] gap-2">
+                            {/* Teams & Flags */}
+                            <div className="flex items-center gap-1 min-w-0 flex-1">
+                              <Flag code={m.home.code} size={14} className="shrink-0" />
+                              <span className="font-semibold text-white/80 truncate text-[10px]">{m.home.short}</span>
+                              <span className="text-white/35 text-[9px] shrink-0">vs</span>
+                              <Flag code={m.away.code} size={14} className="shrink-0" />
+                              <span className="font-semibold text-white/80 truncate text-[10px]">{m.away.short}</span>
+                            </div>
+                            
+                            {/* Pred vs Real */}
+                            <div className="flex items-center gap-1.5 shrink-0 bg-black/20 px-2 py-0.5 rounded-lg text-[9px]">
+                              <span className="text-white/40">Pred:</span>
+                              <span className="text-white font-bold">{pred ? `${pred.home}-${pred.away}` : "-"}</span>
+                              <span className="text-white/20">|</span>
+                              <span className="text-white/40">Real:</span>
+                              <span className="text-gradient-neon font-extrabold">{m.scoreHome}-${m.scoreAway}</span>
+                            </div>
+
+                            {/* Puntos Badge */}
+                            <div className="shrink-0 text-right min-w-[50px]">
+                              {pts > 0 ? (
+                                <span className={`px-1.5 py-0.5 rounded-md text-[8px] font-extrabold uppercase tracking-wide ${
+                                  exact 
+                                    ? "bg-green-500/15 text-green-400 ring-1 ring-green-500/20" 
+                                    : "bg-primary/15 text-primary ring-1 ring-primary/20"
+                                }`}>
+                                  +{pts} PTS
+                                </span>
+                              ) : (
+                                <span className="px-1.5 py-0.5 rounded-md text-[8px] font-bold uppercase tracking-wide bg-white/5 text-white/35">
+                                  0 PTS
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  );
+                })()}
+              </div>
+
+              {/* Premios y Logros */}
+              <div className="space-y-2.5">
+                <span className="text-[10px] font-bold uppercase tracking-widest text-white/40 block">Premios y Logros Ganados</span>
+                
+                <div className="flex items-center gap-3 p-2.5 rounded-xl bg-white/5 border border-white/5">
+                  <span className="text-xl">🏅</span>
+                  <div className="min-w-0">
+                    <span className="text-xs font-bold text-white block">Logro "Primer Gol" (Participación)</span>
+                    <span className="text-[10px] text-primary font-semibold">Calificado para todos los sorteos</span>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3 p-2.5 rounded-xl bg-white/5 border border-white/5">
+                  <span className="text-xl">🎯</span>
+                  <div className="min-w-0">
+                    <span className="text-xs font-bold text-white block">Logro "Hat-Trick" (Racha Activa)</span>
+                    {selectedUser.maxStreak && selectedUser.maxStreak >= 3 ? (
+                      <span className="text-[10px] text-[oklch(0.9_0.18_85)] font-bold">🏆 ¡Desbloqueado! Racha récord de {selectedUser.maxStreak}</span>
+                    ) : (
+                      <span className="text-[10px] text-white/45">No desbloqueado (Racha máx: {selectedUser.maxStreak || 0}/3)</span>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
 
             <button
               onClick={() => setSelectedUser(null)}
-              className="mt-6 w-full rounded-2xl bg-white/10 hover:bg-white/15 py-3 text-xs font-bold uppercase tracking-widest text-white transition active:scale-95"
+              className="mt-5 w-full rounded-2xl bg-white/10 hover:bg-white/15 py-3 text-xs font-bold uppercase tracking-widest text-white transition active:scale-95 shrink-0"
             >
               Cerrar Detalles
             </button>

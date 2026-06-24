@@ -3,6 +3,17 @@
 Historial cronológico de cambios, mejoras y actualizaciones de la quiniela **Golazo (Mundial 2026)**. Los cambios más recientes se muestran al principio.
 
 ---
+### [2026-06-24 01:50] Desglose de Puntos por Partido en Ranking e Historial de Pronósticos
+- **Descripción:** Se implementó una vista detallada que muestra a los usuarios qué partidos y cuántos puntos ha obtenido cada participante en el Ranking, y se añadió un filtro rápido en el historial de pronósticos.
+- **Detalles:**
+  * **Pestaña "Con Puntos" en Pronósticos (`my-predictions.tsx`):** Se añadió una nueva pestaña y filtro `"Con Puntos"` en la sección de mis pronósticos para aislar rápidamente aquellos partidos finalizados donde el usuario obtuvo algún punto (`pts > 0`). Se adaptó la fila de pestañas a un formato scrollable horizontalmente para evitar desbordes visuales en pantallas pequeñas.
+  * **Lista de Puntos por Partido en Modal de Ranking (`ranking.tsx`):** Dentro del modal flotante de detalle de usuario, se agregó la sección *"Puntos por Partido"*. Esta lista organiza primero los partidos finalizados que otorgaron puntos al usuario (ordenados de más recientes a más antiguos) y luego coloca debajo los partidos sin puntos (también en orden descendente por fecha), mostrando la predicción, resultado real e insignias de puntos.
+  * **Pasarela de Datos en Ranking (`leaderboard.ts`):** Se extendió el tipo `LeaderboardEntry` con la propiedad `predictions` y se poblaron dichos datos en los listados dinámicos mockeados y consultas reales a Supabase Auth para habilitar el desglose detallado en el cliente.
+- **Archivos modificados:**
+  * [leaderboard.ts](file:///d:/AntigravitDev/golazo-main/src/data/leaderboard.ts)
+  * [ranking.tsx](file:///d:/AntigravitDev/golazo-main/src/routes/ranking.tsx)
+  * [my-predictions.tsx](file:///d:/AntigravitDev/golazo-main/src/routes/my-predictions.tsx)
+
 ### [2026-06-24 01:30] Corrección de Spinners Infinitos y Sesiones Suspendidas en PWA
 - **Descripción:** Se solucionó el problema por el cual la app se quedaba cargando indefinidamente al perder conexión o expirar la sesión, y se mejoró la persistencia de la sesión en PWAs.
 - **Detalles:**

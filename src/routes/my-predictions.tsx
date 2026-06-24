@@ -24,7 +24,7 @@ export const Route = createFileRoute("/my-predictions")({
   component: MyPredictionsPage,
 });
 
-type FilterType = "all" | "finished" | "pending";
+type FilterType = "all" | "finished" | "pending" | "with-points";
 
 function MyPredictionsPage() {
   const { format } = useTimeFormat();
@@ -53,12 +53,40 @@ function MyPredictionsPage() {
     if (filter === "pending") {
       return m.status === "scheduled" || m.status === "live";
     }
+    if (filter === "with-points") {
+      return m.status === "finished" && calculateMatchPoints(m, userPredictions[m.id]) > 0;
+    }
     return true;
   });
 
   // Ordenar: cronológico ascendente (más antiguos primero)
   const sortedMatches = [...filteredMatches].sort((a, b) => {
     return new Date(a.kickoff).getTime() - new Date(b.kickoff).getTime();
+  });
+
+  // Calcular estadísticas de los pronósticos guardados
+  let totalPointsEarned = 0;
+  let exactHits = 0;
+  let winnerHits = 0;
+  let finishedCount = 0;
+
+  predictedMatches.forEach((m) => {
+    if (m.status === "finished") {
+      const pred = userPredictions[m.id];
+      if (pred) {
+        finishedCount++;
+        const pts = calculateMatchPoints(m, pred);
+        totalPointsEarned += pts;
+        const exact = isPredictionExact(m, pred);
+        if (pts > 0) {
+          if (exact) {
+            exactHits++;
+          } else {
+            winnerHits++;
+          }
+        }
+      }
+    }
   });
 
   return (
@@ -81,17 +109,37 @@ function MyPredictionsPage() {
         </p>
       </header>
 
+      {/* Resumen de Puntos de Pronósticos */}
+      {finishedCount > 0 && (
+        <div className="mt-5 mx-5 glass rounded-3xl p-4 border border-white/10 flex items-center justify-around text-center">
+          <div>
+            <span className="text-[9px] font-bold uppercase tracking-wider text-white/40 block">Puntos Acumulados</span>
+            <span className="font-display text-2xl text-primary mt-1 block">+{totalPointsEarned} PTS</span>
+          </div>
+          <div className="h-8 w-[1px] bg-white/10" />
+          <div>
+            <span className="text-[9px] font-bold uppercase tracking-wider text-white/40 block">Marcadores Exactos</span>
+            <span className="font-display text-2xl text-white mt-1 block">{exactHits}</span>
+          </div>
+          <div className="h-8 w-[1px] bg-white/10" />
+          <div>
+            <span className="text-[9px] font-bold uppercase tracking-wider text-white/40 block">Ganadores/Empates</span>
+            <span className="font-display text-2xl text-white mt-1 block">{winnerHits}</span>
+          </div>
+        </div>
+      )}
+
       {/* Selector de Filtros */}
-      <div className="mt-6 flex gap-2 px-5">
-        {(["all", "finished", "pending"] as const).map((f) => (
+      <div className="mt-6 flex gap-1.5 px-5 overflow-x-auto pb-1.5 scrollbar-none">
+        {(["all", "finished", "pending", "with-points"] as const).map((f) => (
           <button
             key={f}
             onClick={() => setFilter(f)}
-            className={`flex-1 rounded-2xl py-2 px-3 text-[11px] font-bold uppercase tracking-widest transition active:scale-95 text-center truncate ${
+            className={`flex-1 rounded-xl py-2 px-2.5 text-[10px] font-bold uppercase tracking-wider transition active:scale-95 text-center shrink-0 min-w-[76px] truncate ${
               filter === f ? "bg-primary text-primary-foreground neon-glow" : "glass text-white/70"
             }`}
           >
-            {f === "all" ? "Todos" : f === "finished" ? "Finalizados" : "Pendientes"}
+            {f === "all" ? "Todos" : f === "finished" ? "Finalizados" : f === "pending" ? "Pendientes" : "Con Puntos"}
           </button>
         ))}
       </div>
