@@ -3,6 +3,14 @@
 Historial cronológico de cambios, mejoras y actualizaciones de la quiniela **Golazo (Mundial 2026)**. Los cambios más recientes se muestran al principio.
 
 ---
+### [2026-06-26 17:45] Restricción de Cambio de Selección Favorita en Perfil
+- **Descripción:** Se deshabilitó la posibilidad de cambiar la selección favorita una vez que ya ha sido guardada en el perfil del usuario.
+- **Detalles:**
+  * **Bloqueo del Selector (`profile.tsx`):** Se añadió la propiedad `disabled={!!profile?.country_code}` al selector de país en el modal de edición de perfil. Esto evita cambios accidentales o intencionados tras el registro.
+  * **Indicación en Interfaz (`profile.tsx`):** Se actualizó dinámicamente el texto explicativo del modal para indicar explícitamente: *"Actualiza tu nombre o usuario. La selección favorita ya no se puede cambiar"* en caso de que ya cuente con una selección guardada.
+- **Archivos modificados:**
+  * [profile.tsx](file:///d:/AntigravitDev/golazo-main/src/routes/profile.tsx)
+
 ### [2026-06-24 01:50] Desglose de Puntos por Partido en Ranking e Historial de Pronósticos
 - **Descripción:** Se implementó una vista detallada que muestra a los usuarios qué partidos y cuántos puntos ha obtenido cada participante en el Ranking, y se añadió un filtro rápido en el historial de pronósticos.
 - **Detalles:**

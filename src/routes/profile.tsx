@@ -827,7 +827,11 @@ function ProfilePage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
           <div className="glass-strong w-full max-w-md overflow-hidden rounded-3xl p-6 relative border border-white/10 shadow-2xl">
             <h3 className="font-display text-2xl text-white mb-1">Editar Perfil</h3>
-            <p className="text-xs text-white/50 mb-5">Actualiza tu nombre, usuario o selección favorita.</p>
+            <p className="text-xs text-white/50 mb-5">
+              {profile?.country_code 
+                ? "Actualiza tu nombre o usuario. La selección favorita ya no se puede cambiar." 
+                : "Actualiza tu nombre, usuario o selección favorita."}
+            </p>
 
             <form onSubmit={handleSaveProfile} className="space-y-4">
               <div className="space-y-1.5">
@@ -867,7 +871,8 @@ function ProfilePage() {
                   <select
                     value={editCountryCode}
                     onChange={(e) => setEditCountryCode(e.target.value)}
-                    className="w-full rounded-2xl bg-[#11171d] py-3 pl-11 pr-4 text-sm text-white ring-1 ring-white/10 focus:outline-none focus:ring-2 focus:ring-primary transition appearance-none"
+                    disabled={!!profile?.country_code}
+                    className="w-full rounded-2xl bg-[#11171d] py-3 pl-11 pr-4 text-sm text-white ring-1 ring-white/10 focus:outline-none focus:ring-2 focus:ring-primary transition appearance-none disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {allGroupTeams()
                       .sort((a, b) => a.name.localeCompare(b.name))
