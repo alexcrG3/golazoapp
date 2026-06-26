@@ -287,10 +287,8 @@ function RankingPage() {
                       };
                     })
                     .sort((a, b) => {
-                      const hasPtsA = a.pts > 0 ? 1 : 0;
-                      const hasPtsB = b.pts > 0 ? 1 : 0;
-                      if (hasPtsA !== hasPtsB) {
-                        return hasPtsB - hasPtsA; // Aquellos con puntos van arriba
+                      if (a.pts !== b.pts) {
+                        return b.pts - a.pts; // Aquellos con más puntos van arriba (ej. +3/+5 antes de +1)
                       }
                       return b.time - a.time; // Más nuevos primero dentro de cada grupo
                     });
@@ -318,7 +316,7 @@ function RankingPage() {
                               <span className="text-white font-bold">{pred ? `${pred.home}-${pred.away}` : "-"}</span>
                               <span className="text-white/20">|</span>
                               <span className="text-white/40">Real:</span>
-                              <span className="text-gradient-neon font-extrabold">{m.scoreHome}-${m.scoreAway}</span>
+                              <span className="text-gradient-neon font-extrabold">{m.scoreHome}-{m.scoreAway}</span>
                             </div>
 
                             {/* Puntos Badge */}

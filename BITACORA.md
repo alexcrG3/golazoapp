@@ -3,6 +3,14 @@
 Historial cronológico de cambios, mejoras y actualizaciones de la quiniela **Golazo (Mundial 2026)**. Los cambios más recientes se muestran al principio.
 
 ---
+### [2026-06-26 17:50] Corrección de Ordenamiento de Puntos y Formato de Marcador Real en Ranking
+- **Descripción:** Se corrigió un error de ordenamiento y un formato incorrecto de visualización en la sección de puntos por partido del modal de detalles de usuario.
+- **Detalles:**
+  * **Orden por Puntos Descendente (`ranking.tsx`):** Se ajustó el comparador de ordenamiento para ordenar los partidos finalizados de mayor a menor puntaje (ej. aciertos exactos de `+3` o `+5` puntos antes de los aciertos de ganador de `+1` punto), evitando que los partidos con más puntos queden relegados hacia abajo de la lista.
+  * **Corrección de Formato de Marcador Real (`ranking.tsx`):** Se eliminó un carácter literal `$` que se mostraba incorrectamente en el renderizado del resultado real (ej. pintando `1-$4` en lugar de `1-4`).
+- **Archivos modificados:**
+  * [ranking.tsx](file:///d:/AntigravitDev/golazo-main/src/routes/ranking.tsx)
+
 ### [2026-06-26 17:45] Restricción de Cambio de Selección Favorita en Perfil
 - **Descripción:** Se deshabilitó la posibilidad de cambiar la selección favorita una vez que ya ha sido guardada en el perfil del usuario.
 - **Detalles:**
