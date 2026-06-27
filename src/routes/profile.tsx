@@ -578,6 +578,7 @@ function ProfilePage() {
     full_name: user.email?.split("@")[0] || "Usuario",
     username: user.email?.split("@")[0] || "usuario",
     country_code: "cr",
+    avatar_url: null,
   };
 
   return (

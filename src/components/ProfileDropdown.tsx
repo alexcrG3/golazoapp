@@ -140,6 +140,7 @@ export function ProfileDropdown() {
 
             <Link
               to="/rules"
+              search={{ tab: "manual" }}
               onClick={() => setIsOpen(false)}
               className="flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-[11px] font-bold uppercase tracking-wider text-white/70 hover:text-white hover:bg-white/10 transition active:scale-[0.98]"
             >

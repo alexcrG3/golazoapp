@@ -118,3 +118,58 @@ USING (
   bucket_id = 'avatars'
   AND auth.uid()::text = (storage.foldername(name))[1]
 );
+
+-- 5. Crear la tabla de Grupos (Groups)
+CREATE TABLE IF NOT EXISTS public.groups (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name TEXT NOT NULL,
+    code VARCHAR(10) UNIQUE NOT NULL,
+    creator_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+-- Habilitar RLS en public.groups
+ALTER TABLE public.groups ENABLE ROW LEVEL SECURITY;
+
+-- Políticas de RLS para public.groups
+CREATE POLICY "Permitir lectura pública de grupos" 
+ON public.groups FOR SELECT 
+USING (true);
+
+CREATE POLICY "Permitir crear grupos a usuarios autenticados" 
+ON public.groups FOR INSERT 
+WITH CHECK (auth.uid() = creator_id);
+
+CREATE POLICY "Permitir a creadores actualizar sus grupos" 
+ON public.groups FOR UPDATE 
+USING (auth.uid() = creator_id);
+
+CREATE POLICY "Permitir a creadores eliminar sus grupos" 
+ON public.groups FOR DELETE 
+USING (auth.uid() = creator_id);
+
+
+-- 6. Crear la tabla de Miembros de Grupo (Group Members)
+CREATE TABLE IF NOT EXISTS public.group_members (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    group_id UUID NOT NULL REFERENCES public.groups(id) ON DELETE CASCADE,
+    user_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+    joined_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
+    UNIQUE(group_id, user_id)
+);
+
+-- Habilitar RLS en public.group_members
+ALTER TABLE public.group_members ENABLE ROW LEVEL SECURITY;
+
+-- Políticas de RLS para public.group_members
+CREATE POLICY "Permitir lectura pública de miembros de grupo" 
+ON public.group_members FOR SELECT 
+USING (true);
+
+CREATE POLICY "Permitir unirse a usuarios autenticados" 
+ON public.group_members FOR INSERT 
+WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Permitir salir de grupo a miembros" 
+ON public.group_members FOR DELETE 
+USING (auth.uid() = user_id);

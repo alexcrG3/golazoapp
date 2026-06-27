@@ -3,6 +3,17 @@
 Historial cronológico de cambios, mejoras y actualizaciones de la quiniela **Golazo (Mundial 2026)**. Los cambios más recientes se muestran al principio.
 
 ---
+### [2026-06-26 18:45] Implementación de Ligas y Grupos Privados (Fase 1)
+- **Descripción:** Se implementó el soporte completo para ligas cerradas y grupos privados, permitiendo a los usuarios competir por separado con sus amigos o colegas sin mezclar posiciones con la tabla global.
+- **Detalles:**
+  * **Esquema de Base de Datos (`supabase_schema.sql`):** Se crearon las tablas `public.groups` y `public.group_members`, se habilitó Row Level Security (RLS) y se establecieron políticas detalladas para permitir a los usuarios crear, unirse, listar y salir de grupos de forma segura.
+  * **Servicio de Base de Datos (`groups.ts`):** Se construyó el servicio `groupsService` para controlar la generación de códigos alfanuméricos de invitación, la inserción del creador como miembro inicial, la gestión de altas y bajas, y el cálculo del ranking aislado (leaderboard) filtrado solo para los miembros del grupo.
+  * **Pestaña e Interfaz de Grupos (`ranking.tsx`):** Se agregó la pestaña *"Grupos"* en la sección de Clasificación. Habilita un flujo interactivo para crear y unirse a grupos con modales emergentes y copiar códigos al portapapeles. Muestra la lista de grupos activos y permite ingresar a ver el ranking interno de cada quiniela privada.
+- **Archivos modificados/creados:**
+  * [supabase_schema.sql](file:///d:/AntigravitDev/golazo-main/supabase_schema.sql)
+  * [groups.ts](file:///d:/AntigravitDev/golazo-main/src/lib/groups.ts) [NUEVO]
+  * [ranking.tsx](file:///d:/AntigravitDev/golazo-main/src/routes/ranking.tsx)
+
 ### [2026-06-26 17:50] Corrección de Ordenamiento de Puntos y Formato de Marcador Real en Ranking
 - **Descripción:** Se corrigió un error de ordenamiento y un formato incorrecto de visualización en la sección de puntos por partido del modal de detalles de usuario.
 - **Detalles:**

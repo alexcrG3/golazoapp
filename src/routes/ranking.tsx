@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Crown, Flame, Trophy, Menu, User, Sparkles } from "lucide-react";
+import { Crown, Flame, Trophy, Menu, User, Sparkles, Users, Plus, Clipboard, ArrowLeft, LogOut, Loader2 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { AppShell } from "@/components/AppShell";
 import { Flag } from "@/components/Flag";
@@ -11,6 +11,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { useSidebar } from "@/contexts/SidebarContext";
 import { useChampion, calculateMatchPoints, isPredictionExact, isPredictionCorrect } from "@/lib/predictionsStore";
 import { ProfileDropdown } from "@/components/ProfileDropdown";
+import { groupsService } from "@/lib/groups";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/ranking")({
   head: () => ({
@@ -25,8 +27,16 @@ export const Route = createFileRoute("/ranking")({
 function RankingPage() {
   const { user, profile } = useAuth();
   const { open: openSidebar } = useSidebar();
-  const [activeTab, setActiveTab] = useState<"leaderboard" | "prizes">("leaderboard");
+  const [activeTab, setActiveTab] = useState<"leaderboard" | "groups" | "prizes">("leaderboard");
   const [selectedUser, setSelectedUser] = useState<LeaderboardEntry | null>(null);
+
+  // Estados para grupos privados
+  const [activeGroupId, setActiveGroupId] = useState<string | null>(null);
+  const [isCreatingGroup, setIsCreatingGroup] = useState(false);
+  const [isJoiningGroup, setIsJoiningGroup] = useState(false);
+  const [newGroupName, setNewGroupName] = useState("");
+  const [joinGroupCode, setJoinGroupCode] = useState("");
+  const [isSubmittingGroupAction, setIsSubmittingGroupAction] = useState(false);
 
   const { data: apiData, isLoading: matchesLoading } = useQuery({
     queryKey: ["realMatchesAndGroups"],
@@ -52,6 +62,100 @@ function RankingPage() {
     queryFn: () => getOtherPrizesStatus(matchesList),
     enabled: matchesList.length > 0,
   });
+
+  // Query para obtener los grupos a los que pertenece el usuario
+  const { data: userGroups = [], refetch: refetchGroups, isLoading: userGroupsLoading } = useQuery({
+    queryKey: ["userGroups", user?.id],
+    queryFn: () => groupsService.getUserGroups(user!.id),
+    enabled: !!user?.id,
+  });
+
+  // Query para obtener el leaderboard del grupo seleccionado
+  const { data: groupLeaderboard = [], isLoading: groupLeaderboardLoading } = useQuery({
+    queryKey: ["groupLeaderboard", activeGroupId, matchesList],
+    queryFn: () => groupsService.getGroupLeaderboard(activeGroupId!, matchesList),
+    enabled: !!activeGroupId && matchesList.length > 0,
+  });
+
+  // Buscar el grupo actualmente seleccionado en la lista de grupos
+  const activeGroup = userGroups.find((g) => g.id === activeGroupId);
+
+  const handleCreateGroup = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user) {
+      toast.error("Inicia sesión para crear un grupo.");
+      return;
+    }
+    const name = newGroupName.trim();
+    if (!name) {
+      toast.error("El nombre del grupo es obligatorio.");
+      return;
+    }
+    setIsSubmittingGroupAction(true);
+    try {
+      const newGroup = await groupsService.createGroup(name, user.id);
+      toast.success(`¡Grupo "${newGroup.name}" creado con éxito!`);
+      setNewGroupName("");
+      setIsCreatingGroup(false);
+      refetchGroups();
+      setActiveGroupId(newGroup.id);
+    } catch (err: any) {
+      console.error(err);
+      toast.error(err.message || "Error al crear el grupo.");
+    } finally {
+      setIsSubmittingGroupAction(false);
+    }
+  };
+
+  const handleJoinGroup = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user) {
+      toast.error("Inicia sesión para unirse a un grupo.");
+      return;
+    }
+    const code = joinGroupCode.trim().toUpperCase();
+    if (!code) {
+      toast.error("El código de invitación es obligatorio.");
+      return;
+    }
+    setIsSubmittingGroupAction(true);
+    try {
+      const joinedGroup = await groupsService.joinGroup(code, user.id);
+      toast.success(`¡Te has unido al grupo "${joinedGroup.name}"!`);
+      setJoinGroupCode("");
+      setIsJoiningGroup(false);
+      refetchGroups();
+      setActiveGroupId(joinedGroup.id);
+    } catch (err: any) {
+      console.error(err);
+      toast.error(err.message || "Error al unirse al grupo.");
+    } finally {
+      setIsSubmittingGroupAction(false);
+    }
+  };
+
+  const handleLeaveGroup = async (groupId: string, groupName: string) => {
+    if (!user) return;
+    const confirmLeave = window.confirm(`¿Estás seguro de que quieres salir del grupo "${groupName}"?`);
+    if (!confirmLeave) return;
+
+    try {
+      await groupsService.leaveGroup(groupId, user.id);
+      toast.success(`Has salido del grupo "${groupName}".`);
+      if (activeGroupId === groupId) {
+        setActiveGroupId(null);
+      }
+      refetchGroups();
+    } catch (err: any) {
+      console.error(err);
+      toast.error(err.message || "Error al salir del grupo.");
+    }
+  };
+
+  const handleCopyCode = (code: string) => {
+    navigator.clipboard.writeText(code);
+    toast.success("¡Código copiado al portapapeles!");
+  };
 
   const [first, second, third, ...rest] = dynamicLeaderboard;
 
@@ -101,6 +205,17 @@ function RankingPage() {
               }`}
             >
               <Trophy className="h-3.5 w-3.5" /> Posiciones
+            </button>
+            <button
+              onClick={() => {
+                setActiveTab("groups");
+                setActiveGroupId(null);
+              }}
+              className={`flex-1 flex items-center justify-center gap-1.5 rounded-xl py-2.5 text-xs font-bold uppercase tracking-wider transition ${
+                activeTab === "groups" ? "bg-white text-black font-extrabold" : "text-white/60 hover:text-white"
+              }`}
+            >
+              <Users className="h-3.5 w-3.5" /> Grupos
             </button>
             <button
               onClick={() => setActiveTab("prizes")}
@@ -181,6 +296,191 @@ function RankingPage() {
             </section>
           )}
         </>
+      ) : activeTab === "groups" ? (
+        <section className="mt-6 px-4 mb-20 space-y-6">
+          {!activeGroupId ? (
+            // VISTA: Listado de mis grupos
+            <>
+              {/* Botones de acción rápida */}
+              <div className="grid grid-cols-2 gap-3 px-1">
+                <button
+                  onClick={() => setIsCreatingGroup(true)}
+                  className="flex items-center justify-center gap-2 rounded-2xl bg-primary py-3 text-xs font-bold uppercase tracking-wider text-primary-foreground transition active:scale-95 neon-glow cursor-pointer"
+                >
+                  <Plus className="h-4 w-4" /> Crear Grupo
+                </button>
+                <button
+                  onClick={() => setIsJoiningGroup(true)}
+                  className="flex items-center justify-center gap-2 rounded-2xl bg-white/10 hover:bg-white/15 py-3 text-xs font-bold uppercase tracking-wider text-white transition active:scale-95 border border-white/5 cursor-pointer"
+                >
+                  <Users className="h-4 w-4" /> Unirme con Código
+                </button>
+              </div>
+
+              {/* Lista de grupos */}
+              <div className="space-y-3 mt-4">
+                <span className="text-[10px] font-bold uppercase tracking-widest text-white/40 block px-1">Mis Grupos Privados</span>
+                {userGroupsLoading ? (
+                  <div className="flex flex-col items-center justify-center py-12 gap-2">
+                    <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                    <span className="text-xs text-white/50">Cargando grupos...</span>
+                  </div>
+                ) : userGroups.length === 0 ? (
+                  <div className="glass rounded-3xl p-6 text-center py-10">
+                    <Users className="h-10 w-10 text-white/20 mx-auto mb-3" />
+                    <h4 className="font-display text-base text-white">Ningún grupo activo</h4>
+                    <p className="text-[11px] text-white/55 mt-1 max-w-[240px] mx-auto leading-relaxed">
+                      Crea tu propia quiniela privada o únete a una con tus amigos usando un código de invitación.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="grid gap-3">
+                    {userGroups.map((group) => (
+                      <div
+                        key={group.id}
+                        className="glass relative overflow-hidden rounded-3xl p-4 border border-white/5 flex flex-col gap-3.5"
+                      >
+                        <div className="flex items-start justify-between min-w-0">
+                          <div>
+                            <h4 className="font-display text-lg text-white truncate max-w-[200px]">{group.name}</h4>
+                            <span className="text-[10px] text-primary font-bold uppercase tracking-wider block mt-0.5">
+                              {group.member_count} {group.member_count === 1 ? "miembro" : "miembros"}
+                            </span>
+                          </div>
+                          
+                          {/* Botón copiar código */}
+                          <button
+                            onClick={() => handleCopyCode(group.code)}
+                            className="glass py-1.5 px-2.5 rounded-xl text-[10px] font-bold text-white/70 hover:text-white transition flex items-center gap-1 hover:bg-white/10 active:scale-95 cursor-pointer"
+                            title="Copiar código de invitación"
+                          >
+                            <Clipboard className="h-3 w-3" /> {group.code}
+                          </button>
+                        </div>
+
+                        <div className="flex items-center gap-2 border-t border-white/5 pt-3">
+                          <button
+                            onClick={() => setActiveGroupId(group.id)}
+                            className="flex-1 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 py-2.5 text-[11px] font-bold uppercase tracking-wider text-white transition active:scale-[0.98] cursor-pointer text-center"
+                          >
+                            Ver Clasificación
+                          </button>
+                          <button
+                            onClick={() => handleLeaveGroup(group.id, group.name)}
+                            className="rounded-xl bg-red-500/10 hover:bg-red-500/15 border border-red-500/20 py-2.5 px-3 text-[11px] font-bold uppercase tracking-wider text-red-400 transition active:scale-[0.98] cursor-pointer text-center"
+                            title="Salir del grupo"
+                          >
+                            <LogOut className="h-4 w-4" />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </>
+          ) : (
+            // VISTA: Posiciones de un grupo privado
+            <>
+              {/* Encabezado de navegación del grupo */}
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => setActiveGroupId(null)}
+                  className="glass grid h-8 w-8 place-items-center rounded-full hover:bg-white/15 transition active:scale-90 cursor-pointer"
+                  title="Volver a mis grupos"
+                >
+                  <ArrowLeft className="h-4 w-4 text-white" />
+                </button>
+                <div className="min-w-0">
+                  <span className="text-[9px] font-bold uppercase tracking-widest text-primary font-bold">Grupo Privado</span>
+                  <h3 className="font-display text-xl text-white truncate max-w-[200px] leading-tight">
+                    {activeGroup?.name || "Cargando grupo..."}
+                  </h3>
+                </div>
+              </div>
+
+              {/* Tarjeta de información del grupo */}
+              {activeGroup && (
+                <div className="glass rounded-3xl p-4 border border-white/5 flex items-center justify-between">
+                  <div>
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-white/40 block">Código para compartir</span>
+                    <button
+                      onClick={() => handleCopyCode(activeGroup.code)}
+                      className="mt-1 font-mono font-extrabold text-2xl text-gradient-gold tracking-widest flex items-center gap-1.5 hover:opacity-80 active:scale-95 transition"
+                      title="Copiar código de invitación"
+                    >
+                      {activeGroup.code} <Clipboard className="h-4 w-4 text-white/40 inline" />
+                    </button>
+                  </div>
+                  <div className="text-right">
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-white/40 block">Participantes</span>
+                    <span className="font-display text-2xl text-white mt-1 block">{activeGroup.member_count}</span>
+                  </div>
+                </div>
+              )}
+
+              {/* Tabla de clasificación del grupo */}
+              <div className="glass overflow-hidden rounded-3xl">
+                <div className="flex items-center justify-between border-b border-white/10 px-5 py-3 text-[11px] font-bold uppercase tracking-widest text-white/55">
+                  <span>Miembro</span>
+                  <span>Puntos</span>
+                </div>
+                {groupLeaderboardLoading ? (
+                  <div className="flex flex-col items-center justify-center py-12 gap-2">
+                    <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                    <span className="text-xs text-white/50">Cargando clasificación...</span>
+                  </div>
+                ) : groupLeaderboard.length === 0 ? (
+                  <div className="py-10 text-center text-xs text-white/45 italic">No hay miembros registrados.</div>
+                ) : (
+                  <ul className="divide-y divide-white/5">
+                    {groupLeaderboard.map((member) => {
+                      const entryMock: LeaderboardEntry = {
+                        rank: member.rank,
+                        name: member.name,
+                        country: member.country,
+                        points: member.points,
+                        accuracy: member.accuracy,
+                        streak: 0,
+                        isYou: member.id === user?.id,
+                        id: member.id,
+                        exactCount: member.exactCount,
+                        correctCount: member.correctCount,
+                        championPick: null,
+                      };
+
+                      return (
+                        <li
+                          key={member.id}
+                          onClick={() => setSelectedUser(entryMock)}
+                          className={`flex items-center justify-between px-5 py-3.5 transition cursor-pointer hover:bg-white/5 active:scale-[0.99] ${
+                            member.id === user?.id ? "bg-primary/10 ring-1 ring-primary/30 hover:bg-primary/15" : ""
+                          }`}
+                        >
+                          <div className="flex min-w-0 items-center gap-3">
+                            <span className={`font-display w-6 text-base ${member.id === user?.id ? "text-primary" : "text-white/40"}`}>
+                              {member.rank}
+                            </span>
+                            <Flag code={member.country} size={30} />
+                            <div className="min-w-0">
+                              <div className={`truncate font-semibold text-sm ${member.id === user?.id ? "text-primary" : "text-white"}`}>
+                                {member.name}
+                              </div>
+                              <div className="text-[10px] text-white/55">
+                                {member.accuracy}% prec. · {member.exactCount} exactos
+                              </div>
+                            </div>
+                          </div>
+                          <div className="font-display text-xl text-white">{member.points}</div>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                )}
+              </div>
+            </>
+          )}
+        </section>
       ) : (
         <OtherPrizesContent 
           leaderboardData={dynamicLeaderboard} 
@@ -279,7 +579,7 @@ function RankingPage() {
                     .map((m) => {
                       const pred = selectedUser.predictions?.[m.id];
                       const pts = pred ? calculateMatchPoints(m, pred) : 0;
-                      const dateStr = m.kickoff || m.date || "";
+                      const dateStr = m.kickoff || "";
                       return {
                         match: m,
                         pts,
@@ -375,6 +675,96 @@ function RankingPage() {
             >
               Cerrar Detalles
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* Modal: Crear Grupo Privado */}
+      {isCreatingGroup && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
+          <div className="glass-strong w-full max-w-sm overflow-hidden rounded-3xl p-6 relative border border-white/10 shadow-2xl animate-in fade-in zoom-in duration-200">
+            <h3 className="font-display text-xl text-white mb-1">Crear Grupo Privado</h3>
+            <p className="text-xs text-white/50 mb-4">Crea una quiniela cerrada para competir con tu gente.</p>
+            
+            <form onSubmit={handleCreateGroup} className="space-y-4">
+              <div className="space-y-1.5">
+                <label className="text-[10px] uppercase tracking-widest text-white/50 block font-semibold">Nombre del Grupo</label>
+                <input
+                  type="text"
+                  value={newGroupName}
+                  onChange={(e) => setNewGroupName(e.target.value)}
+                  placeholder="ej. Los Galácticos de la Oficina"
+                  maxLength={30}
+                  className="w-full rounded-2xl bg-white/5 py-3 px-4 text-sm text-white ring-1 ring-white/10 focus:outline-none focus:ring-2 focus:ring-primary transition"
+                  required
+                  disabled={isSubmittingGroupAction}
+                />
+              </div>
+              
+              <div className="flex items-center gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setIsCreatingGroup(false)}
+                  disabled={isSubmittingGroupAction}
+                  className="flex-1 rounded-2xl bg-white/5 border border-white/10 py-3 text-xs font-bold uppercase tracking-widest text-white hover:bg-white/10 transition active:scale-95 disabled:opacity-50"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSubmittingGroupAction}
+                  className="flex-1 rounded-2xl bg-primary py-3 text-xs font-bold uppercase tracking-widest text-primary-foreground transition active:scale-95 disabled:opacity-50 neon-glow flex items-center justify-center gap-1.5 cursor-pointer"
+                >
+                  {isSubmittingGroupAction && <Loader2 className="h-3 w-3 animate-spin" />}
+                  Crear
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal: Unirse con Código */}
+      {isJoiningGroup && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
+          <div className="glass-strong w-full max-w-sm overflow-hidden rounded-3xl p-6 relative border border-white/10 shadow-2xl animate-in fade-in zoom-in duration-200">
+            <h3 className="font-display text-xl text-white mb-1">Unirme a un Grupo</h3>
+            <p className="text-xs text-white/50 mb-4">Ingresa el código alfanumérico para ingresar a la quiniela privada.</p>
+            
+            <form onSubmit={handleJoinGroup} className="space-y-4">
+              <div className="space-y-1.5">
+                <label className="text-[10px] uppercase tracking-widest text-white/50 block font-semibold">Código de Invitación</label>
+                <input
+                  type="text"
+                  value={joinGroupCode}
+                  onChange={(e) => setJoinGroupCode(e.target.value)}
+                  placeholder="ej. XF92JD"
+                  maxLength={10}
+                  className="w-full rounded-2xl bg-white/5 py-3 px-4 text-sm text-white ring-1 ring-white/10 focus:outline-none focus:ring-2 focus:ring-primary transition text-center font-mono font-bold tracking-widest uppercase"
+                  required
+                  disabled={isSubmittingGroupAction}
+                />
+              </div>
+              
+              <div className="flex items-center gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setIsJoiningGroup(false)}
+                  disabled={isSubmittingGroupAction}
+                  className="flex-1 rounded-2xl bg-white/5 border border-white/10 py-3 text-xs font-bold uppercase tracking-widest text-white hover:bg-white/10 transition active:scale-95 disabled:opacity-50"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSubmittingGroupAction}
+                  className="flex-1 rounded-2xl bg-primary py-3 text-xs font-bold uppercase tracking-widest text-primary-foreground transition active:scale-95 disabled:opacity-50 neon-glow flex items-center justify-center gap-1.5 cursor-pointer"
+                >
+                  {isSubmittingGroupAction && <Loader2 className="h-3 w-3 animate-spin" />}
+                  Ingresar
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

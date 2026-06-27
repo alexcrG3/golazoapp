@@ -69,7 +69,7 @@ export function getDynamicLeaderboard(matchesList: any[]): LeaderboardEntry[] {
 
   const userPredictions = predictionsStore.getAll();
 
-  const entries: LeaderboardEntry[] = seed.map(player => {
+  const entries = seed.map(player => {
     if (player.isYou) {
       let pts = 0;
       let correct = 0;

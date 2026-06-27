@@ -47,14 +47,21 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
     }
   };
 
-  const navItems = [
+  interface NavItem {
+    to: string;
+    label: string;
+    Icon: any;
+    isSpecial?: boolean;
+  }
+
+  const navItems: NavItem[] = [
     { to: "/", label: "Inicio", Icon: Home },
     { to: "/matches", label: "Partidos", Icon: Ball },
     { to: "/ranking", label: "Ranking", Icon: Trophy },
     { to: "/profile", label: "Mi Perfil", Icon: User },
     { to: "/my-predictions", label: "Mis Pronósticos", Icon: FileText },
     { to: "/champion", label: "Campeón Mundial", Icon: Trophy, isSpecial: true },
-  ] as const;
+  ];
 
   const legalItems = [
     { to: "/rules", search: { tab: "manual" }, label: "Manual de Juego", Icon: BookOpen },
