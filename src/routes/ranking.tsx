@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Crown, Flame, Trophy, Menu, User, Sparkles, Users, Plus, Clipboard, ArrowLeft, LogOut, Loader2 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
@@ -29,6 +29,17 @@ function RankingPage() {
   const { open: openSidebar } = useSidebar();
   const [activeTab, setActiveTab] = useState<"leaderboard" | "groups" | "prizes">("groups");
   const [selectedUser, setSelectedUser] = useState<LeaderboardEntry | null>(null);
+
+  // Determinar si el usuario es del grupo original
+  const ORIGINAL_USERNAMES = ["alexg3", "ghiuly", "eilyn", "gianna", "javiertroz"];
+  const isOriginalUser = !!profile && ORIGINAL_USERNAMES.includes(profile.username);
+
+  // Forzar tab de grupos por defecto para usuarios nuevos
+  useEffect(() => {
+    if (user && !isOriginalUser && activeTab === "leaderboard") {
+      setActiveTab("groups");
+    }
+  }, [user, isOriginalUser, activeTab]);
 
   // Estados para grupos privados
   const [activeGroupId, setActiveGroupId] = useState<string | null>(null);
@@ -174,59 +185,105 @@ function RankingPage() {
 
   return (
     <AppShell>
-      <header className="relative z-20 px-5 pt-[max(28px,env(safe-area-inset-top))]">
-        <div className="flex items-center justify-between gap-3 mb-4">
-          <button
-            onClick={openSidebar}
-            title="Menú"
-            className="glass grid h-9 w-9 place-items-center rounded-full hover:bg-white/15 transition"
-          >
-            <Menu className="h-4 w-4 text-white" />
-          </button>
-          <ProfileDropdown />
-        </div>
-        <span className="text-[11px] font-bold uppercase tracking-[0.25em] text-primary block mt-1">Ranking Global</span>
-        <h1 className="font-display mt-1 text-5xl leading-none text-white">Clasificación</h1>
-        <p className="mt-2 text-sm text-white/55">
-          {dynamicLeaderboard.length > 0 
-            ? `${dynamicLeaderboard.length} pronosticadores compitiendo en la quiniela` 
-            : "Compite con tus amigos en la quiniela"}
-        </p>
-      </header>
-
-      {/* Tabs Selector */}
-      {dynamicLeaderboard.length > 0 && (
-        <section className="mt-6 px-5">
-          <div className="flex rounded-2xl bg-white/5 p-1 ring-1 ring-white/10">
+      {activeGroupId ? (
+        <header className="relative z-20 px-5 pt-[max(28px,env(safe-area-inset-top))]">
+          <div className="flex items-center justify-between gap-3 mb-4">
             <button
-              onClick={() => setActiveTab("leaderboard")}
-              className={`flex-1 flex items-center justify-center gap-1.5 rounded-xl py-2.5 text-xs font-bold uppercase tracking-wider transition ${
-                activeTab === "leaderboard" ? "bg-white text-black font-extrabold" : "text-white/60 hover:text-white"
-              }`}
+              onClick={() => setActiveGroupId(null)}
+              title="Volver a mis grupos"
+              className="glass grid h-9 w-9 place-items-center rounded-full hover:bg-white/15 transition active:scale-90 cursor-pointer"
             >
-              <Trophy className="h-3.5 w-3.5" /> Ranking Global
+              <ArrowLeft className="h-4 w-4 text-white" />
             </button>
-            <button
-              onClick={() => {
-                setActiveTab("groups");
-                setActiveGroupId(null);
-              }}
-              className={`flex-1 flex items-center justify-center gap-1.5 rounded-xl py-2.5 text-xs font-bold uppercase tracking-wider transition ${
-                activeTab === "groups" ? "bg-white text-black font-extrabold" : "text-white/60 hover:text-white"
-              }`}
-            >
-              <Users className="h-3.5 w-3.5" /> Grupos
-            </button>
-            <button
-              onClick={() => setActiveTab("prizes")}
-              className={`flex-1 flex items-center justify-center gap-1.5 rounded-xl py-2.5 text-xs font-bold uppercase tracking-wider transition ${
-                activeTab === "prizes" ? "bg-white text-black font-extrabold" : "text-white/60 hover:text-white"
-              }`}
-            >
-              <Crown className="h-3.5 w-3.5" /> Otros Premios
-            </button>
+            <ProfileDropdown />
           </div>
-        </section>
+          <span className="text-[11px] font-bold uppercase tracking-[0.25em] text-primary block mt-1">Grupo Privado</span>
+          <h1 className="font-display mt-1 text-5xl leading-none text-white truncate max-w-[320px]">
+            {activeGroup?.name || "Cargando grupo..."}
+          </h1>
+          <p className="mt-2 text-sm text-white/55">
+            Clasificación interna e independiente
+          </p>
+        </header>
+      ) : (
+        <>
+          <header className="relative z-20 px-5 pt-[max(28px,env(safe-area-inset-top))]">
+            <div className="flex items-center justify-between gap-3 mb-4">
+              <button
+                onClick={openSidebar}
+                title="Menú"
+                className="glass grid h-9 w-9 place-items-center rounded-full hover:bg-white/15 transition"
+              >
+                <Menu className="h-4 w-4 text-white" />
+              </button>
+              <ProfileDropdown />
+            </div>
+            {activeTab === "leaderboard" && isOriginalUser ? (
+              <>
+                <span className="text-[11px] font-bold uppercase tracking-[0.25em] text-primary block mt-1">Ranking Global</span>
+                <h1 className="font-display mt-1 text-5xl leading-none text-white">Clasificación</h1>
+                <p className="mt-2 text-sm text-white/55">
+                  {dynamicLeaderboard.length > 0 
+                    ? `${dynamicLeaderboard.length} pronosticadores compitiendo en la quiniela` 
+                    : "Compite con tus amigos en la quiniela"}
+                </p>
+              </>
+            ) : activeTab === "groups" ? (
+              <>
+                <span className="text-[11px] font-bold uppercase tracking-[0.25em] text-primary block mt-1">Mis Quinielas</span>
+                <h1 className="font-display mt-1 text-5xl leading-none text-white font-black uppercase">Grupos</h1>
+                <p className="mt-2 text-sm text-white/55">
+                  Compite en salas privadas exclusivas con tus amigos
+                </p>
+              </>
+            ) : (
+              <>
+                <span className="text-[11px] font-bold uppercase tracking-[0.25em] text-primary block mt-1">Premios</span>
+                <h1 className="font-display mt-1 text-5xl leading-none text-white">Otros Premios</h1>
+                <p className="mt-2 text-sm text-white/55">
+                  Sorteos y recompensas exclusivas
+                </p>
+              </>
+            )}
+          </header>
+
+          {/* Tabs Selector */}
+          {dynamicLeaderboard.length > 0 && (
+            <section className="mt-6 px-5">
+              <div className="flex rounded-2xl bg-white/5 p-1 ring-1 ring-white/10">
+                {isOriginalUser && (
+                  <button
+                    onClick={() => setActiveTab("leaderboard")}
+                    className={`flex-1 flex items-center justify-center gap-1.5 rounded-xl py-2.5 text-xs font-bold uppercase tracking-wider transition ${
+                      activeTab === "leaderboard" ? "bg-white text-black font-extrabold" : "text-white/60 hover:text-white"
+                    }`}
+                  >
+                    <Trophy className="h-3.5 w-3.5" /> Ranking Global
+                  </button>
+                )}
+                <button
+                  onClick={() => {
+                    setActiveTab("groups");
+                    setActiveGroupId(null);
+                  }}
+                  className={`flex-1 flex items-center justify-center gap-1.5 rounded-xl py-2.5 text-xs font-bold uppercase tracking-wider transition ${
+                    activeTab === "groups" ? "bg-white text-black font-extrabold" : "text-white/60 hover:text-white"
+                  }`}
+                >
+                  <Users className="h-3.5 w-3.5" /> Grupos
+                </button>
+                <button
+                  onClick={() => setActiveTab("prizes")}
+                  className={`flex-1 flex items-center justify-center gap-1.5 rounded-xl py-2.5 text-xs font-bold uppercase tracking-wider transition ${
+                    activeTab === "prizes" ? "bg-white text-black font-extrabold" : "text-white/60 hover:text-white"
+                  }`}
+                >
+                  <Crown className="h-3.5 w-3.5" /> Otros Premios
+                </button>
+              </div>
+            </section>
+          )}
+        </>
       )}
 
       {dynamicLeaderboard.length === 0 ? (
@@ -397,23 +454,6 @@ function RankingPage() {
           ) : (
             // VISTA: Posiciones de un grupo privado
             <>
-              {/* Encabezado de navegación del grupo */}
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={() => setActiveGroupId(null)}
-                  className="glass grid h-8 w-8 place-items-center rounded-full hover:bg-white/15 transition active:scale-90 cursor-pointer"
-                  title="Volver a mis grupos"
-                >
-                  <ArrowLeft className="h-4 w-4 text-white" />
-                </button>
-                <div className="min-w-0">
-                  <span className="text-[9px] font-bold uppercase tracking-widest text-primary font-bold">Grupo Privado</span>
-                  <h3 className="font-display text-xl text-white truncate max-w-[200px] leading-tight">
-                    {activeGroup?.name || "Cargando grupo..."}
-                  </h3>
-                </div>
-              </div>
-
               {/* Tarjeta de información del grupo */}
               {activeGroup && (
                 <div className="glass rounded-3xl p-4 border border-white/5 flex items-center justify-between">
