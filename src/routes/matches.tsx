@@ -224,13 +224,13 @@ function GroupView({ groupName, matchesList, groupsList }: { groupName: string; 
             <span className="font-display text-2xl text-white">Grupo {groupName}</span>
             <span className="text-[10px] uppercase tracking-widest text-white/45">Tabla</span>
           </div>
-          <div className="grid grid-cols-[28px_1fr_repeat(5,_28px)_36px] gap-2 px-5 py-2 text-[10px] uppercase tracking-widest text-white/40">
+          <div className="grid grid-cols-[20px_1fr_24px_24px_32px] sm:grid-cols-[28px_1fr_repeat(5,_28px)_36px] gap-1.5 sm:gap-2 px-3 sm:px-5 py-2 text-[10px] uppercase tracking-widest text-white/40">
             <span>#</span>
             <span>Equipo</span>
             <span className="text-center">PJ</span>
-            <span className="text-center">G</span>
-            <span className="text-center">E</span>
-            <span className="text-center">P</span>
+            <span className="text-center hidden sm:block">G</span>
+            <span className="text-center hidden sm:block">E</span>
+            <span className="text-center hidden sm:block">P</span>
             <span className="text-center">DG</span>
             <span className="text-right">PTS</span>
           </div>
@@ -238,17 +238,17 @@ function GroupView({ groupName, matchesList, groupsList }: { groupName: string; 
             {rows.map((r, i) => (
               <li
                 key={r.team.code}
-                className="grid grid-cols-[28px_1fr_repeat(5,_28px)_36px] items-center gap-2 px-5 py-3 text-[11px] text-white/70"
+                className="grid grid-cols-[20px_1fr_24px_24px_32px] sm:grid-cols-[28px_1fr_repeat(5,_28px)_36px] items-center gap-1.5 sm:gap-2 px-3 sm:px-5 py-3 text-[11px] text-white/70"
               >
                 <span className={`font-display ${i < 2 ? "text-primary" : "text-white/40"}`}>{i + 1}</span>
-                <div className="flex min-w-0 items-center gap-2">
-                  <Flag code={r.team.code} size={28} />
+                <div className="flex min-w-0 items-center gap-1.5 sm:gap-2">
+                  <Flag code={r.team.code} size={24} className="flex-shrink-0" />
                   <span className="truncate font-semibold text-white">{r.team.name}</span>
                 </div>
                 <span className="text-center">{r.pj}</span>
-                <span className="text-center">{r.g}</span>
-                <span className="text-center">{r.e}</span>
-                <span className="text-center">{r.p}</span>
+                <span className="text-center hidden sm:block">{r.g}</span>
+                <span className="text-center hidden sm:block">{r.e}</span>
+                <span className="text-center hidden sm:block">{r.p}</span>
                 <span className="text-center">{r.dg > 0 ? `+${r.dg}` : r.dg}</span>
                 <span className="text-right font-display text-base text-primary">{r.pts}</span>
               </li>

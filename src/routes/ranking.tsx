@@ -27,19 +27,12 @@ export const Route = createFileRoute("/ranking")({
 function RankingPage() {
   const { user, profile } = useAuth();
   const { open: openSidebar } = useSidebar();
-  const [activeTab, setActiveTab] = useState<"leaderboard" | "groups" | "prizes">("groups");
+  const [activeTab, setActiveTab] = useState<"leaderboard" | "groups" | "prizes">("leaderboard");
   const [selectedUser, setSelectedUser] = useState<LeaderboardEntry | null>(null);
 
   // Determinar si el usuario es del grupo original
   const ORIGINAL_USERNAMES = ["alexg3", "ghiuly", "eilyn", "gianna", "javiertroz"];
   const isOriginalUser = !!profile && ORIGINAL_USERNAMES.includes(profile.username);
-
-  // Forzar tab de grupos por defecto para usuarios nuevos
-  useEffect(() => {
-    if (user && !isOriginalUser && activeTab === "leaderboard") {
-      setActiveTab("groups");
-    }
-  }, [user, isOriginalUser, activeTab]);
 
   // Estados para grupos privados
   const [activeGroupId, setActiveGroupId] = useState<string | null>(null);
@@ -90,6 +83,13 @@ function RankingPage() {
 
   // Buscar el grupo actualmente seleccionado en la lista de grupos
   const activeGroup = userGroups.find((g) => g.id === activeGroupId);
+
+  // Auto-seleccionar primer grupo para usuarios nuevos si no hay ninguno activo
+  useEffect(() => {
+    if (user && !isOriginalUser && !activeGroupId && userGroups.length > 0) {
+      setActiveGroupId(userGroups[0].id);
+    }
+  }, [user, isOriginalUser, activeGroupId, userGroups]);
 
   // Mapear top 3 del grupo para el podio
   const gFirst = groupLeaderboard[0] ? {
@@ -282,14 +282,30 @@ function RankingPage() {
               </button>
               <ProfileDropdown />
             </div>
-            {activeTab === "leaderboard" && isOriginalUser ? (
+            {activeTab === "leaderboard" ? (
               <>
-                <span className="text-[11px] font-bold uppercase tracking-[0.25em] text-primary block mt-1">Ranking Global</span>
-                <h1 className="font-display mt-1 text-5xl leading-none text-white">Clasificación</h1>
+                <span className="text-[11px] font-bold uppercase tracking-[0.25em] text-primary block mt-1">
+                  {activeGroupId && activeGroup ? `Quiniela: ${activeGroup.name}` : "Ranking Global"}
+                </span>
+                <div className="flex items-baseline justify-between mt-1">
+                  <h1 className="font-display text-5xl leading-none text-white">Clasificación</h1>
+                  {activeGroupId && isOriginalUser && (
+                    <button
+                      onClick={() => setActiveGroupId(null)}
+                      className="text-[10px] font-bold uppercase tracking-wider text-primary hover:underline cursor-pointer"
+                    >
+                      Ver Global
+                    </button>
+                  )}
+                </div>
                 <p className="mt-2 text-sm text-white/55">
-                  {dynamicLeaderboard.length > 0 
-                    ? `${dynamicLeaderboard.length} pronosticadores compitiendo en la quiniela` 
-                    : "Compite con tus amigos en la quiniela"}
+                  {activeGroupId && activeGroup ? (
+                    `${activeGroup.member_count} ${activeGroup.member_count === 1 ? 'pronosticador' : 'pronosticadores'} compitiendo en este grupo`
+                  ) : dynamicLeaderboard.length > 0 ? (
+                    `${dynamicLeaderboard.length} pronosticadores compitiendo en la quiniela`
+                  ) : (
+                    "Compite con tus amigos en la quiniela"
+                  )}
                 </p>
               </>
             ) : activeTab === "groups" ? (
@@ -315,20 +331,20 @@ function RankingPage() {
           {dynamicLeaderboard.length > 0 && (
             <section className="mt-6 px-5">
               <div className="flex rounded-2xl bg-white/5 p-1 ring-1 ring-white/10">
-                {isOriginalUser && (
-                  <button
-                    onClick={() => setActiveTab("leaderboard")}
-                    className={`flex-1 flex items-center justify-center gap-1.5 rounded-xl py-2.5 text-xs font-bold uppercase tracking-wider transition ${
-                      activeTab === "leaderboard" ? "bg-white text-black font-extrabold" : "text-white/60 hover:text-white"
-                    }`}
-                  >
-                    <Trophy className="h-3.5 w-3.5" /> Ranking Global
-                  </button>
-                )}
+                <button
+                  onClick={() => {
+                    setActiveTab("leaderboard");
+                  }}
+                  className={`flex-1 flex items-center justify-center gap-1.5 rounded-xl py-2.5 text-xs font-bold uppercase tracking-wider transition ${
+                    activeTab === "leaderboard" ? "bg-white text-black font-extrabold" : "text-white/60 hover:text-white"
+                  }`}
+                >
+                  <Trophy className="h-3.5 w-3.5" /> 
+                  {activeGroupId && activeGroup ? activeGroup.name : "Ranking Global"}
+                </button>
                 <button
                   onClick={() => {
                     setActiveTab("groups");
-                    setActiveGroupId(null);
                   }}
                   className={`flex-1 flex items-center justify-center gap-1.5 rounded-xl py-2.5 text-xs font-bold uppercase tracking-wider transition ${
                     activeTab === "groups" ? "bg-white text-black font-extrabold" : "text-white/60 hover:text-white"
@@ -364,57 +380,180 @@ function RankingPage() {
         </div>
       ) : activeTab === "leaderboard" ? (
         <>
-          {/* Podium */}
-          <section className="mt-8 px-4">
-            <div className="grid grid-cols-3 items-end gap-3">
-              <PodiumCard player={second} place={2} height="h-36" onClick={() => second && setSelectedUser(second)} />
-              <PodiumCard player={first} place={1} height="h-44" featured onClick={() => first && setSelectedUser(first)} />
-              <PodiumCard player={third} place={3} height="h-32" onClick={() => third && setSelectedUser(third)} />
-            </div>
-          </section>
-
-          {/* List of all players (including top 3) */}
-          {dynamicLeaderboard.length > 0 && (
-            <section className="mt-8 px-4 mb-6">
-              <div className="glass overflow-hidden rounded-3xl">
-                <div className="flex items-center justify-between border-b border-white/10 px-5 py-3 text-[11px] font-bold uppercase tracking-widest text-white/55">
-                  <span>Pronosticador</span>
-                  <span>Puntos</span>
-                </div>
-                <ul className="divide-y divide-white/5">
-                  {dynamicLeaderboard.map((p) => (
-                    <li
-                      key={p.rank}
-                      onClick={() => setSelectedUser(p)}
-                      className={`flex items-center justify-between px-5 py-3.5 transition cursor-pointer hover:bg-white/5 active:scale-[0.99] ${
-                        p.isYou ? "bg-primary/10 ring-1 ring-primary/30 hover:bg-primary/15" : ""
-                      }`}
+          {activeGroupId && activeGroup ? (
+            <>
+              {/* Tarjeta de información del grupo */}
+              <div className="px-4 mt-6">
+                <div className="glass rounded-3xl p-4 border border-white/5 flex items-center justify-between gap-3">
+                  <div>
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-white/40 block">Código para compartir</span>
+                    <button
+                      onClick={() => handleCopyCode(activeGroup.code)}
+                      className="mt-1 font-mono font-extrabold text-2xl text-gradient-gold tracking-widest flex items-center gap-1.5 hover:opacity-80 active:scale-95 transition"
+                      title="Copiar código de invitación"
                     >
-                      <div className="flex min-w-0 items-center gap-3">
-                        <span className={`font-display w-6 text-lg ${p.isYou ? "text-primary" : "text-white/40"}`}>
-                          {p.rank}
-                        </span>
-                        <Flag code={p.country} size={36} />
-                        <div className="min-w-0">
-                          <div className={`truncate font-semibold ${p.isYou ? "text-primary" : "text-white"}`}>
-                            {p.name}
-                          </div>
-                          <div className="flex items-center gap-2 text-[11px] text-white/55">
-                            <span>{p.accuracy}% prec.</span>
-                            {p.streak > 0 && (
-                              <span className="inline-flex items-center gap-0.5 text-[oklch(0.85_0.16_50)] font-semibold">
-                                <Flame className="h-3 w-3 fill-current" /> {p.streak}
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                      <div className="font-display text-2xl text-white">{p.points}</div>
-                    </li>
-                  ))}
-                </ul>
+                      {activeGroup.code} <Clipboard className="h-4 w-4 text-white/40 inline" />
+                    </button>
+                  </div>
+
+                  {/* Si es creador o superadmin, botón de eliminar */}
+                  {(profile?.username === "alexg3" || activeGroup.creator_id === user?.id) && (
+                    <button
+                      onClick={() => handleDeleteGroup(activeGroup.id, activeGroup.name)}
+                      className="rounded-2xl bg-red-500/10 hover:bg-red-500/15 border border-red-500/20 py-2 px-4 text-xs font-bold uppercase tracking-wider text-red-400 transition active:scale-[0.98] flex items-center gap-1.5 cursor-pointer"
+                      title="Eliminar grupo por completo"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" /> Eliminar Grupo
+                    </button>
+                  )}
+
+                  <div className="text-right">
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-white/40 block">Participantes</span>
+                    <span className="font-display text-2xl text-white mt-1 block">{activeGroup.member_count}</span>
+                  </div>
+                </div>
               </div>
-            </section>
+
+              {/* Podium del Grupo */}
+              {!groupLeaderboardLoading && groupLeaderboard.length > 0 && (
+                <section className="mt-6 px-4">
+                  <div className="grid grid-cols-3 items-end gap-3">
+                    <PodiumCard player={gSecond} place={2} height="h-36" onClick={() => gSecond && setSelectedUser(gSecond)} />
+                    <PodiumCard player={gFirst} place={1} height="h-44" featured onClick={() => gFirst && setSelectedUser(gFirst)} />
+                    <PodiumCard player={gThird} place={3} height="h-32" onClick={() => gThird && setSelectedUser(gThird)} />
+                  </div>
+                </section>
+              )}
+
+              {/* Tabla de clasificación del grupo */}
+              <section className="mt-8 px-4 mb-6">
+                <div className="glass overflow-hidden rounded-3xl">
+                  <div className="flex items-center justify-between border-b border-white/10 px-5 py-3 text-[11px] font-bold uppercase tracking-widest text-white/55">
+                    <span>Miembro</span>
+                    <span>Puntos</span>
+                  </div>
+                  {groupLeaderboardLoading ? (
+                    <div className="flex flex-col items-center justify-center py-12 gap-2">
+                      <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                      <span className="text-xs text-white/50">Cargando clasificación...</span>
+                    </div>
+                  ) : groupLeaderboard.length === 0 ? (
+                    <div className="py-12 text-center text-xs text-white/55">
+                      No hay miembros en este grupo todavía.
+                    </div>
+                  ) : (
+                    <ul className="divide-y divide-white/5">
+                      {groupLeaderboard.map((p) => {
+                        const entryMock: LeaderboardEntry = {
+                          rank: p.rank,
+                          name: p.name,
+                          country: p.country,
+                          points: p.points,
+                          accuracy: p.accuracy,
+                          streak: 0,
+                          isYou: p.id === user?.id,
+                          id: p.id,
+                          exactCount: p.exactCount,
+                          correctCount: p.correctCount,
+                          championPick: null,
+                        };
+                        return (
+                          <li
+                            key={p.id}
+                            onClick={() => setSelectedUser(entryMock)}
+                            className={`flex items-center justify-between px-5 py-3.5 transition cursor-pointer hover:bg-white/5 active:scale-[0.99] ${
+                              p.id === user?.id ? "bg-primary/10 ring-1 ring-primary/30 hover:bg-primary/15" : ""
+                            }`}
+                          >
+                            <div className="flex min-w-0 items-center gap-3">
+                              <span className={`font-display w-6 text-lg ${p.id === user?.id ? "text-primary" : "text-white/40"}`}>{p.rank}</span>
+                              <Flag code={p.country} size={36} />
+                              <div className="min-w-0">
+                                <div className={`truncate font-semibold ${p.id === user?.id ? "text-primary" : "text-white"}`}>{p.name}</div>
+                                <div className="text-[10px] text-white/55">
+                                  {p.accuracy}% prec. · {p.exactCount} exactos
+                                </div>
+                              </div>
+                            </div>
+                            <div className="font-display text-2xl text-white">{p.points}</div>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  )}
+                </div>
+              </section>
+            </>
+          ) : isOriginalUser ? (
+            <>
+              {/* Podium Original */}
+              <section className="mt-8 px-4">
+                <div className="grid grid-cols-3 items-end gap-3">
+                  <PodiumCard player={second} place={2} height="h-36" onClick={() => second && setSelectedUser(second)} />
+                  <PodiumCard player={first} place={1} height="h-44" featured onClick={() => first && setSelectedUser(first)} />
+                  <PodiumCard player={third} place={3} height="h-32" onClick={() => third && setSelectedUser(third)} />
+                </div>
+              </section>
+
+              {/* List of all players (including top 3) */}
+              {dynamicLeaderboard.length > 0 && (
+                <section className="mt-8 px-4 mb-6">
+                  <div className="glass overflow-hidden rounded-3xl">
+                    <div className="flex items-center justify-between border-b border-white/10 px-5 py-3 text-[11px] font-bold uppercase tracking-widest text-white/55">
+                      <span>Pronosticador</span>
+                      <span>Puntos</span>
+                    </div>
+                    <ul className="divide-y divide-white/5">
+                      {dynamicLeaderboard.map((p) => (
+                        <li
+                          key={p.rank}
+                          onClick={() => setSelectedUser(p)}
+                          className={`flex items-center justify-between px-5 py-3.5 transition cursor-pointer hover:bg-white/5 active:scale-[0.99] ${
+                            p.isYou ? "bg-primary/10 ring-1 ring-primary/30 hover:bg-primary/15" : ""
+                          }`}
+                        >
+                          <div className="flex min-w-0 items-center gap-3">
+                            <span className={`font-display w-6 text-lg ${p.isYou ? "text-primary" : "text-white/40"}`}>
+                              {p.rank}
+                            </span>
+                            <Flag code={p.country} size={36} />
+                            <div className="min-w-0">
+                              <div className={`truncate font-semibold ${p.isYou ? "text-primary" : "text-white"}`}>
+                                {p.name}
+                              </div>
+                              <div className="flex items-center gap-2 text-[11px] text-white/55">
+                                <span>{p.accuracy}% prec.</span>
+                                {p.streak > 0 && (
+                                  <span className="inline-flex items-center gap-0.5 text-[oklch(0.85_0.16_50)] font-semibold">
+                                    <Flame className="h-3 w-3 fill-current" /> {p.streak}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                          <div className="font-display text-2xl text-white">{p.points}</div>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </section>
+              )}
+            </>
+          ) : (
+            <div className="mt-12 px-6 text-center py-16 glass rounded-3xl mx-5 relative overflow-hidden">
+              <div className="absolute inset-0 -z-10 bg-gradient-to-br from-primary/5 via-transparent to-transparent" />
+              <Trophy className="h-12 w-12 text-primary mx-auto opacity-40 animate-pulse mb-4" />
+              <p className="font-display text-2xl text-white">Sin Clasificación</p>
+              <p className="text-xs text-white/50 mt-2 max-w-[240px] mx-auto">
+                No perteneces al grupo original ni estás en ningún grupo privado todavía.
+              </p>
+              <button
+                onClick={() => setActiveTab("groups")}
+                className="mt-6 rounded-2xl bg-primary py-3 px-6 text-xs font-bold uppercase tracking-widest text-primary-foreground transition active:scale-95 neon-glow cursor-pointer"
+              >
+                Ver Mis Grupos
+              </button>
+            </div>
           )}
         </>
       ) : activeTab === "groups" ? (
@@ -434,7 +573,7 @@ function RankingPage() {
                 Iniciar Sesión / Registrarse
               </Link>
             </div>
-          ) : !activeGroupId ? (
+          ) : (
             // VISTA: Listado de mis grupos
             <>
               {/* Botones de acción rápida */}
@@ -455,6 +594,31 @@ function RankingPage() {
 
               {/* Lista de grupos */}
               <div className="space-y-3 mt-4">
+                {isOriginalUser && (
+                  <div className="glass relative overflow-hidden rounded-3xl p-4 border border-white/5 flex flex-col gap-3.5 bg-gradient-to-br from-primary/10 to-transparent">
+                    <div className="flex items-start justify-between min-w-0">
+                      <div>
+                        <h4 className="font-display text-lg text-white truncate max-w-[200px]">Ranking Global</h4>
+                        <span className="text-[10px] text-primary font-bold uppercase tracking-wider block mt-0.5">
+                          Grupo Original
+                        </span>
+                      </div>
+                      <Trophy className="h-5 w-5 text-primary" />
+                    </div>
+                    <div className="flex items-center gap-2 border-t border-white/5 pt-3">
+                      <button
+                        onClick={() => {
+                          setActiveGroupId(null);
+                          setActiveTab("leaderboard");
+                        }}
+                        className="flex-1 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 py-2.5 text-[11px] font-bold uppercase tracking-wider text-white transition active:scale-[0.98] cursor-pointer text-center font-extrabold"
+                      >
+                        Ver Clasificación Global
+                      </button>
+                    </div>
+                  </div>
+                )}
+
                 <span className="text-[10px] font-bold uppercase tracking-widest text-white/40 block px-1">Mis Grupos Privados</span>
                 {userGroupsLoading ? (
                   <div className="flex flex-col items-center justify-center py-12 gap-2">
@@ -496,7 +660,10 @@ function RankingPage() {
 
                         <div className="flex items-center gap-2 border-t border-white/5 pt-3">
                           <button
-                            onClick={() => setActiveGroupId(group.id)}
+                            onClick={() => {
+                              setActiveGroupId(group.id);
+                              setActiveTab("leaderboard");
+                            }}
                             className="flex-1 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 py-2.5 text-[11px] font-bold uppercase tracking-wider text-white transition active:scale-[0.98] cursor-pointer text-center"
                           >
                             Ver Clasificación
@@ -522,112 +689,6 @@ function RankingPage() {
                       </div>
                     ))}
                   </div>
-                )}
-              </div>
-            </>
-          ) : (
-            // VISTA: Posiciones de un grupo privado
-            <>
-              {/* Tarjeta de información del grupo */}
-              {activeGroup && (
-                <div className="glass rounded-3xl p-4 border border-white/5 flex items-center justify-between gap-3">
-                  <div>
-                    <span className="text-[10px] font-bold uppercase tracking-widest text-white/40 block">Código para compartir</span>
-                    <button
-                      onClick={() => handleCopyCode(activeGroup.code)}
-                      className="mt-1 font-mono font-extrabold text-2xl text-gradient-gold tracking-widest flex items-center gap-1.5 hover:opacity-80 active:scale-95 transition"
-                      title="Copiar código de invitación"
-                    >
-                      {activeGroup.code} <Clipboard className="h-4 w-4 text-white/40 inline" />
-                    </button>
-                  </div>
-
-                  {/* Si es creador o superadmin, botón de eliminar */}
-                  {(profile?.username === "alexg3" || activeGroup.creator_id === user?.id) && (
-                    <button
-                      onClick={() => handleDeleteGroup(activeGroup.id, activeGroup.name)}
-                      className="rounded-2xl bg-red-500/10 hover:bg-red-500/15 border border-red-500/20 py-2 px-4 text-xs font-bold uppercase tracking-wider text-red-400 transition active:scale-[0.98] flex items-center gap-1.5 cursor-pointer"
-                      title="Eliminar grupo por completo"
-                    >
-                      <Trash2 className="h-3.5 w-3.5" /> Eliminar Grupo
-                    </button>
-                  )}
-
-                  <div className="text-right">
-                    <span className="text-[10px] font-bold uppercase tracking-widest text-white/40 block">Participantes</span>
-                    <span className="font-display text-2xl text-white mt-1 block">{activeGroup.member_count}</span>
-                  </div>
-                </div>
-              )}
-
-              {/* Podium del Grupo */}
-              {!groupLeaderboardLoading && groupLeaderboard.length > 0 && (
-                <section className="mt-4 px-1">
-                  <div className="grid grid-cols-3 items-end gap-3">
-                    <PodiumCard player={gSecond} place={2} height="h-36" onClick={() => gSecond && setSelectedUser(gSecond)} />
-                    <PodiumCard player={gFirst} place={1} height="h-44" featured onClick={() => gFirst && setSelectedUser(gFirst)} />
-                    <PodiumCard player={gThird} place={3} height="h-32" onClick={() => gThird && setSelectedUser(gThird)} />
-                  </div>
-                </section>
-              )}
-
-              {/* Tabla de clasificación del grupo */}
-              <div className="glass overflow-hidden rounded-3xl">
-                <div className="flex items-center justify-between border-b border-white/10 px-5 py-3 text-[11px] font-bold uppercase tracking-widest text-white/55">
-                  <span>Miembro</span>
-                  <span>Puntos</span>
-                </div>
-                {groupLeaderboardLoading ? (
-                  <div className="flex flex-col items-center justify-center py-12 gap-2">
-                    <Loader2 className="h-6 w-6 animate-spin text-primary" />
-                    <span className="text-xs text-white/50">Cargando clasificación...</span>
-                  </div>
-                ) : groupLeaderboard.length === 0 ? (
-                  <div className="py-10 text-center text-xs text-white/45 italic">No hay miembros registrados.</div>
-                ) : (
-                  <ul className="divide-y divide-white/5">
-                    {groupLeaderboard.map((member) => {
-                      const entryMock: LeaderboardEntry = {
-                        rank: member.rank,
-                        name: member.name,
-                        country: member.country,
-                        points: member.points,
-                        accuracy: member.accuracy,
-                        streak: 0,
-                        isYou: member.id === user?.id,
-                        id: member.id,
-                        exactCount: member.exactCount,
-                        correctCount: member.correctCount,
-                        championPick: null,
-                      };
-
-                      return (
-                        <li
-                          key={member.id}
-                          onClick={() => setSelectedUser(entryMock)}
-                          className={`flex items-center justify-between px-5 py-3.5 transition cursor-pointer hover:bg-white/5 active:scale-[0.99] ${
-                            member.id === user?.id ? "bg-primary/10 ring-1 ring-primary/30 hover:bg-primary/15" : ""
-                          }`}
-                        >
-                          <div className="flex min-w-0 items-center gap-3">
-                            <span className={`font-display w-6 text-base ${member.id === user?.id ? "text-primary" : "text-white/40"}`}>
-                              {member.rank}
-                            </span>
-                            <Flag code={member.country} size={30} />
-                            <div className="min-w-0">
-                              <div className={`truncate font-semibold text-sm ${member.id === user?.id ? "text-primary" : "text-white"}`}>
-                                {member.name}
-                              </div>
-                              <div className="text-[10px] text-white/55">
-                                {member.accuracy}% prec. · {member.exactCount} exactos
-                              </div>
-                            </div>
-                          </div>
-                          <div className="font-display text-xl text-white">{member.points}</div>
-                        </li>
-                      );
-                    })}
-                  </ul>
                 )}
               </div>
             </>
