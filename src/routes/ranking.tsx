@@ -199,14 +199,6 @@ function RankingPage() {
         <section className="mt-6 px-5">
           <div className="flex rounded-2xl bg-white/5 p-1 ring-1 ring-white/10">
             <button
-              onClick={() => setActiveTab("leaderboard")}
-              className={`flex-1 flex items-center justify-center gap-1.5 rounded-xl py-2.5 text-xs font-bold uppercase tracking-wider transition ${
-                activeTab === "leaderboard" ? "bg-white text-black font-extrabold" : "text-white/60 hover:text-white"
-              }`}
-            >
-              <Trophy className="h-3.5 w-3.5" /> Ranking Global
-            </button>
-            <button
               onClick={() => {
                 setActiveTab("groups");
                 setActiveGroupId(null);
