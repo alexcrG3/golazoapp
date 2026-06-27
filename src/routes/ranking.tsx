@@ -27,7 +27,7 @@ export const Route = createFileRoute("/ranking")({
 function RankingPage() {
   const { user, profile } = useAuth();
   const { open: openSidebar } = useSidebar();
-  const [activeTab, setActiveTab] = useState<"leaderboard" | "groups" | "prizes">("leaderboard");
+  const [activeTab, setActiveTab] = useState<"leaderboard" | "groups" | "prizes">("groups");
   const [selectedUser, setSelectedUser] = useState<LeaderboardEntry | null>(null);
 
   // Estados para grupos privados
@@ -204,7 +204,7 @@ function RankingPage() {
                 activeTab === "leaderboard" ? "bg-white text-black font-extrabold" : "text-white/60 hover:text-white"
               }`}
             >
-              <Trophy className="h-3.5 w-3.5" /> Posiciones
+              <Trophy className="h-3.5 w-3.5" /> Ranking Global
             </button>
             <button
               onClick={() => {
