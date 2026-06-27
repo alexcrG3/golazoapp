@@ -168,6 +168,19 @@ export const groupsService = {
     groupId: string,
     matchesList: any[]
   ): Promise<GroupMemberLeaderboardEntry[]> {
+    // Obtener la fecha de creación del grupo
+    const { data: groupData, error: gError } = await supabase
+      .from("groups")
+      .select("created_at")
+      .eq("id", groupId)
+      .single();
+
+    if (gError || !groupData) {
+      throw gError || new Error("No se pudo obtener la fecha de creación del grupo.");
+    }
+
+    const groupCreatedAt = new Date(groupData.created_at).getTime();
+
     // Obtener miembros del grupo
     const { data: members, error: mError } = await supabase
       .from("group_members")
@@ -211,6 +224,12 @@ export const groupsService = {
       let finishedPreds = 0;
 
       for (const m of matchesList) {
+        // Ignorar partidos que comenzaron antes de que el grupo fuera creado
+        const matchTime = new Date(m.kickoff || 0).getTime();
+        if (matchTime < groupCreatedAt) {
+          continue;
+        }
+
         const pred = userPreds.find((p) => p.match_id === m.id);
         if (pred) {
           if (m.status === "finished") {
