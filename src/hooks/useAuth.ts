@@ -15,6 +15,7 @@ export type Profile = {
   country_code: string;
   points: number;
   accuracy: number;
+  is_admin?: boolean;
 };
 
 type AuthContextType = {

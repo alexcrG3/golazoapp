@@ -62,6 +62,10 @@ function ProfilePage() {
   const [editCountryCode, setEditCountryCode] = useState("cr");
   const [savingProfile, setSavingProfile] = useState(false);
 
+  // Estados para administración
+  const [adminUsernameInput, setAdminUsernameInput] = useState("");
+  const [submittingAdmin, setSubmittingAdmin] = useState(false);
+
   const { data: apiData } = useQuery({
     queryKey: ["realMatchesAndGroups"],
     queryFn: fetchRealGroupsAndMatches,
@@ -81,6 +85,20 @@ function ProfilePage() {
   const userRank = user 
     ? leaderboardList.find(p => p.id === user.id)?.rank || 1 
     : 1;
+
+  // Query para obtener administradores (solo si el usuario actual es admin)
+  const { data: adminsList = [], refetch: refetchAdmins } = useQuery({
+    queryKey: ["adminsList"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("id, username, full_name, is_admin")
+        .eq("is_admin", true);
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!profile?.is_admin,
+  });
 
   const s = {
     predictions: user ? dynamicStats.predictions : 0,
@@ -195,6 +213,70 @@ function ProfilePage() {
       toast.error("Error al actualizar la contraseña: " + getAuthErrorMessage(err));
     } finally {
       setSubmittingPassword(false);
+    }
+  };
+
+  const handleAddAdmin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const targetUsername = adminUsernameInput.trim().toLowerCase().replace(/^@/, "");
+    if (!targetUsername) return;
+
+    setSubmittingAdmin(true);
+    try {
+      // 1. Buscar si el usuario existe
+      const { data: targetUser, error: findError } = await supabase
+        .from("profiles")
+        .select("id, username")
+        .eq("username", targetUsername)
+        .single();
+
+      if (findError || !targetUser) {
+        toast.error(`No se encontró ningún usuario con el nombre de usuario "@${targetUsername}".`);
+        return;
+      }
+
+      // 2. Dar privilegios
+      const { error: updateError } = await supabase
+        .from("profiles")
+        .update({ is_admin: true })
+        .eq("id", targetUser.id);
+
+      if (updateError) throw updateError;
+
+      toast.success(`¡@${targetUsername} ahora es administrador!`);
+      setAdminUsernameInput("");
+      refetchAdmins();
+    } catch (err: any) {
+      console.error(err);
+      toast.error(err.message || "Error al asignar administrador.");
+    } finally {
+      setSubmittingAdmin(false);
+    }
+  };
+
+  const handleRemoveAdmin = async (adminId: string, adminUsername: string) => {
+    if (adminUsername === profile?.username) {
+      toast.error("No puedes quitarte los privilegios de administrador a ti mismo.");
+      return;
+    }
+
+    if (!confirm(`¿Estás seguro de que quieres quitarle los privilegios de administrador a @${adminUsername}?`)) {
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from("profiles")
+        .update({ is_admin: false })
+        .eq("id", adminId);
+
+      if (error) throw error;
+
+      toast.success(`Se removieron los privilegios de administrador a @${adminUsername}.`);
+      refetchAdmins();
+    } catch (err: any) {
+      console.error(err);
+      toast.error(err.message || "Error al remover administrador.");
     }
   };
 
@@ -654,7 +736,14 @@ function ProfilePage() {
               #{s.rank}
             </span>
           </div>
-          <h1 className="font-display mt-5 text-4xl leading-none text-white">{displayProfile.full_name}</h1>
+          <h1 className="font-display mt-5 text-4xl leading-none text-white flex items-center justify-center gap-2.5">
+            {displayProfile.full_name}
+            {profile?.is_admin && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-primary/20 border border-primary/40 px-2 py-0.5 text-[9px] font-black uppercase tracking-widest text-primary">
+                <ShieldCheck className="h-3 w-3" /> Admin
+              </span>
+            )}
+          </h1>
           <p className="mt-1 text-sm text-white/55">@{displayProfile.username} · Cuenta Sincronizada</p>
 
           <div className="mt-4 flex items-center gap-3">
@@ -781,6 +870,76 @@ function ProfilePage() {
           </Link>
         </div>
       </section>
+
+      {/* Panel de Administración */}
+      {profile?.is_admin && (
+        <section className="mt-8 px-4">
+          <div className="glass rounded-3xl p-5 relative overflow-hidden border border-primary/25">
+            <div className="absolute inset-0 -z-10 bg-gradient-to-br from-primary/5 via-transparent to-transparent" />
+            <h3 className="font-display text-2xl text-white mb-1 flex items-center gap-2">
+              <ShieldCheck className="h-5 w-5 text-primary" /> Panel de Administración
+            </h3>
+            <p className="text-xs text-white/50 mb-4">
+              Asigna o remueve privilegios de administrador a otros usuarios.
+            </p>
+
+            <form onSubmit={handleAddAdmin} className="space-y-3">
+              <div className="space-y-1.5">
+                <label className="text-[10px] uppercase tracking-widest text-white/50 block font-semibold">
+                  Nombre de usuario a designar
+                </label>
+                <div className="relative">
+                  <span className="absolute left-4 top-3 text-sm text-white/40">@</span>
+                  <input
+                    type="text"
+                    value={adminUsernameInput}
+                    onChange={(e) => setAdminUsernameInput(e.target.value)}
+                    placeholder="ej. javierchacon"
+                    className="w-full rounded-2xl bg-white/5 py-3 pl-8 pr-4 text-sm text-white ring-1 ring-white/10 focus:outline-none focus:ring-2 focus:ring-primary transition"
+                    required
+                    disabled={submittingAdmin}
+                  />
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                disabled={submittingAdmin}
+                className="w-full rounded-2xl bg-primary py-3.5 text-xs font-bold uppercase tracking-widest text-primary-foreground transition active:scale-95 disabled:opacity-50 neon-glow mt-2 flex items-center justify-center gap-1.5 cursor-pointer"
+              >
+                Asignar Administrador
+              </button>
+            </form>
+
+            {/* Listado de administradores actuales */}
+            {adminsList.length > 0 && (
+              <div className="mt-6 border-t border-white/10 pt-4 space-y-2.5">
+                <span className="text-[10px] uppercase tracking-widest text-white/40 block font-semibold px-1">
+                  Administradores Activos ({adminsList.length})
+                </span>
+                <ul className="divide-y divide-white/5 bg-white/5 rounded-2xl border border-white/5 overflow-hidden">
+                  {adminsList.map((adm: any) => (
+                    <li key={adm.id} className="flex items-center justify-between px-4 py-3.5 text-xs text-white">
+                      <div className="min-w-0">
+                        <div className="font-semibold truncate">{adm.full_name || "Sin nombre"}</div>
+                        <div className="text-[10px] text-white/55">@{adm.username}</div>
+                      </div>
+                      {adm.username !== profile?.username && (
+                        <button
+                          onClick={() => handleRemoveAdmin(adm.id, adm.username)}
+                          className="rounded-xl bg-red-500/10 hover:bg-red-500/15 border border-red-500/20 py-1.5 px-3 text-[10px] font-bold uppercase tracking-wider text-red-400 transition active:scale-[0.98]"
+                        >
+                          Quitar
+                        </button>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+        </section>
+      )}
 
       {/* Seguridad / Cambiar Contraseña */}
       <section className="mt-8 px-4 mb-10">

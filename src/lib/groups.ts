@@ -125,14 +125,14 @@ export const groupsService = {
 
   // 4. Obtener todos los grupos a los que pertenece el usuario
   async getUserGroups(userId: string): Promise<(Group & { member_count: number })[]> {
-    // Obtener perfil para verificar si es el administrador (alexg3)
+    // Obtener perfil para verificar si es el administrador
     const { data: profileData } = await supabase
       .from("profiles")
-      .select("username")
+      .select("is_admin")
       .eq("id", userId)
       .single();
 
-    const isAdmin = profileData?.username === "alexg3";
+    const isAdmin = !!profileData?.is_admin;
     let groupsList: any[] = [];
 
     if (isAdmin) {
