@@ -184,7 +184,13 @@ export async function getSupabaseLeaderboard(
       .select("*");
     if (predError) throw predError;
 
-    const realEntries: LeaderboardEntry[] = (dbProfiles || []).map((profile) => {
+    // Filtrar para incluir únicamente al grupo original en el ranking global
+    const ORIGINAL_USERNAMES = ["alexg3", "ghiuly", "eilyn", "gianna", "javiertroz"];
+    const filteredProfiles = (dbProfiles || []).filter((p) => 
+      ORIGINAL_USERNAMES.includes(p.username || "")
+    );
+
+    const realEntries: LeaderboardEntry[] = filteredProfiles.map((profile) => {
       const userPreds = (dbPredictions || []).filter((p) => p.user_id === profile.id);
       const predsRecord: Record<string, { home: number; away: number }> = {};
       userPreds.forEach((p) => {
