@@ -91,6 +91,49 @@ function RankingPage() {
   // Buscar el grupo actualmente seleccionado en la lista de grupos
   const activeGroup = userGroups.find((g) => g.id === activeGroupId);
 
+  // Mapear top 3 del grupo para el podio
+  const gFirst = groupLeaderboard[0] ? {
+    rank: 1,
+    name: groupLeaderboard[0].name,
+    country: groupLeaderboard[0].country,
+    points: groupLeaderboard[0].points,
+    accuracy: groupLeaderboard[0].accuracy,
+    streak: 0,
+    isYou: groupLeaderboard[0].id === user?.id,
+    id: groupLeaderboard[0].id,
+    exactCount: groupLeaderboard[0].exactCount,
+    correctCount: groupLeaderboard[0].correctCount,
+    championPick: null,
+  } : undefined;
+
+  const gSecond = groupLeaderboard[1] ? {
+    rank: 2,
+    name: groupLeaderboard[1].name,
+    country: groupLeaderboard[1].country,
+    points: groupLeaderboard[1].points,
+    accuracy: groupLeaderboard[1].accuracy,
+    streak: 0,
+    isYou: groupLeaderboard[1].id === user?.id,
+    id: groupLeaderboard[1].id,
+    exactCount: groupLeaderboard[1].exactCount,
+    correctCount: groupLeaderboard[1].correctCount,
+    championPick: null,
+  } : undefined;
+
+  const gThird = groupLeaderboard[2] ? {
+    rank: 3,
+    name: groupLeaderboard[2].name,
+    country: groupLeaderboard[2].country,
+    points: groupLeaderboard[2].points,
+    accuracy: groupLeaderboard[2].accuracy,
+    streak: 0,
+    isYou: groupLeaderboard[2].id === user?.id,
+    id: groupLeaderboard[2].id,
+    exactCount: groupLeaderboard[2].exactCount,
+    correctCount: groupLeaderboard[2].correctCount,
+    championPick: null,
+  } : undefined;
+
   const handleCreateGroup = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) {
@@ -472,6 +515,17 @@ function RankingPage() {
                     <span className="font-display text-2xl text-white mt-1 block">{activeGroup.member_count}</span>
                   </div>
                 </div>
+              )}
+
+              {/* Podium del Grupo */}
+              {!groupLeaderboardLoading && groupLeaderboard.length > 0 && (
+                <section className="mt-4 px-1">
+                  <div className="grid grid-cols-3 items-end gap-3">
+                    <PodiumCard player={gSecond} place={2} height="h-36" onClick={() => gSecond && setSelectedUser(gSecond)} />
+                    <PodiumCard player={gFirst} place={1} height="h-44" featured onClick={() => gFirst && setSelectedUser(gFirst)} />
+                    <PodiumCard player={gThird} place={3} height="h-32" onClick={() => gThird && setSelectedUser(gThird)} />
+                  </div>
+                </section>
               )}
 
               {/* Tabla de clasificación del grupo */}
