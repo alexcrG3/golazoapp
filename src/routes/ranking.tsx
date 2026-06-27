@@ -298,7 +298,22 @@ function RankingPage() {
         </>
       ) : activeTab === "groups" ? (
         <section className="mt-6 px-4 mb-20 space-y-6">
-          {!activeGroupId ? (
+          {!user ? (
+            // Mensaje para usuarios no autenticados
+            <div className="glass rounded-3xl p-6 text-center py-12">
+              <Users className="h-10 w-10 text-white/20 mx-auto mb-3" />
+              <h4 className="font-display text-base text-white">Quinielas Privadas</h4>
+              <p className="text-[11px] text-white/55 mt-2 max-w-[240px] mx-auto leading-relaxed">
+                Debes iniciar sesión para poder crear tu propio grupo privado o unirte al de tus amigos.
+              </p>
+              <Link
+                to="/profile"
+                className="mt-6 inline-block w-full rounded-2xl bg-primary py-3 text-xs font-bold uppercase tracking-widest text-primary-foreground transition active:scale-95 neon-glow text-center cursor-pointer"
+              >
+                Iniciar Sesión / Registrarse
+              </Link>
+            </div>
+          ) : !activeGroupId ? (
             // VISTA: Listado de mis grupos
             <>
               {/* Botones de acción rápida */}
