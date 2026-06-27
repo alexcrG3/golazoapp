@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Crown, Flame, Trophy, Menu, User, Sparkles, Users, Plus, Clipboard, ArrowLeft, LogOut, Loader2 } from "lucide-react";
+import { Crown, Flame, Trophy, Menu, User, Sparkles, Users, Plus, Clipboard, ArrowLeft, LogOut, Loader2, Trash2 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { AppShell } from "@/components/AppShell";
 import { Flag } from "@/components/Flag";
@@ -203,6 +203,27 @@ function RankingPage() {
     } catch (err: any) {
       console.error(err);
       toast.error(err.message || "Error al salir del grupo.");
+    }
+  };
+
+  const handleDeleteGroup = async (groupId: string, groupName: string) => {
+    if (!user) return;
+    const confirmDelete = window.confirm(`¿Estás seguro de que quieres ELIMINAR por completo el grupo "${groupName}"? Esta acción no se puede deshacer y sacará a todos los miembros.`);
+    if (!confirmDelete) return;
+
+    setIsSubmittingGroupAction(true);
+    try {
+      await groupsService.deleteGroup(groupId);
+      toast.success(`El grupo "${groupName}" ha sido eliminado con éxito.`);
+      if (activeGroupId === groupId) {
+        setActiveGroupId(null);
+      }
+      refetchGroups();
+    } catch (err: any) {
+      console.error(err);
+      toast.error(err.message || "Error al eliminar el grupo.");
+    } finally {
+      setIsSubmittingGroupAction(false);
     }
   };
 
@@ -480,13 +501,23 @@ function RankingPage() {
                           >
                             Ver Clasificación
                           </button>
-                          <button
-                            onClick={() => handleLeaveGroup(group.id, group.name)}
-                            className="rounded-xl bg-red-500/10 hover:bg-red-500/15 border border-red-500/20 py-2.5 px-3 text-[11px] font-bold uppercase tracking-wider text-red-400 transition active:scale-[0.98] cursor-pointer text-center"
-                            title="Salir del grupo"
-                          >
-                            <LogOut className="h-4 w-4" />
-                          </button>
+                          {profile?.username === "alexg3" || group.creator_id === user?.id ? (
+                            <button
+                              onClick={() => handleDeleteGroup(group.id, group.name)}
+                              className="rounded-xl bg-red-500/10 hover:bg-red-500/15 border border-red-500/20 py-2.5 px-3 text-[11px] font-bold uppercase tracking-wider text-red-400 transition active:scale-[0.98] cursor-pointer text-center"
+                              title="Eliminar grupo"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </button>
+                          ) : (
+                            <button
+                              onClick={() => handleLeaveGroup(group.id, group.name)}
+                              className="rounded-xl bg-red-500/10 hover:bg-red-500/15 border border-red-500/20 py-2.5 px-3 text-[11px] font-bold uppercase tracking-wider text-red-400 transition active:scale-[0.98] cursor-pointer text-center"
+                              title="Salir del grupo"
+                            >
+                              <LogOut className="h-4 w-4" />
+                            </button>
+                          )}
                         </div>
                       </div>
                     ))}
@@ -499,7 +530,7 @@ function RankingPage() {
             <>
               {/* Tarjeta de información del grupo */}
               {activeGroup && (
-                <div className="glass rounded-3xl p-4 border border-white/5 flex items-center justify-between">
+                <div className="glass rounded-3xl p-4 border border-white/5 flex items-center justify-between gap-3">
                   <div>
                     <span className="text-[10px] font-bold uppercase tracking-widest text-white/40 block">Código para compartir</span>
                     <button
@@ -510,6 +541,18 @@ function RankingPage() {
                       {activeGroup.code} <Clipboard className="h-4 w-4 text-white/40 inline" />
                     </button>
                   </div>
+
+                  {/* Si es creador o superadmin, botón de eliminar */}
+                  {(profile?.username === "alexg3" || activeGroup.creator_id === user?.id) && (
+                    <button
+                      onClick={() => handleDeleteGroup(activeGroup.id, activeGroup.name)}
+                      className="rounded-2xl bg-red-500/10 hover:bg-red-500/15 border border-red-500/20 py-2 px-4 text-xs font-bold uppercase tracking-wider text-red-400 transition active:scale-[0.98] flex items-center gap-1.5 cursor-pointer"
+                      title="Eliminar grupo por completo"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" /> Eliminar Grupo
+                    </button>
+                  )}
+
                   <div className="text-right">
                     <span className="text-[10px] font-bold uppercase tracking-widest text-white/40 block">Participantes</span>
                     <span className="font-display text-2xl text-white mt-1 block">{activeGroup.member_count}</span>

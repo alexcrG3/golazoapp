@@ -739,8 +739,13 @@ function ProfilePage() {
           <h1 className="font-display mt-5 text-4xl leading-none text-white flex items-center justify-center gap-2.5">
             {displayProfile.full_name}
             {profile?.is_admin && (
-              <span className="inline-flex items-center gap-1 rounded-full bg-primary/20 border border-primary/40 px-2 py-0.5 text-[9px] font-black uppercase tracking-widest text-primary">
-                <ShieldCheck className="h-3 w-3" /> Admin
+              <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[9px] font-black uppercase tracking-widest ${
+                profile.username === "alexg3" 
+                  ? "bg-amber-500/15 border border-amber-500/30 text-amber-400" 
+                  : "bg-primary/20 border border-primary/40 text-primary"
+              }`}>
+                <ShieldCheck className="h-3 w-3" />
+                {profile.username === "alexg3" ? "Super Admin" : "Admin"}
               </span>
             )}
           </h1>
@@ -872,7 +877,7 @@ function ProfilePage() {
       </section>
 
       {/* Panel de Administración */}
-      {profile?.is_admin && (
+      {profile?.username === "alexg3" && (
         <section className="mt-8 px-4">
           <div className="glass rounded-3xl p-5 relative overflow-hidden border border-primary/25">
             <div className="absolute inset-0 -z-10 bg-gradient-to-br from-primary/5 via-transparent to-transparent" />

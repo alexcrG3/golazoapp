@@ -311,4 +311,23 @@ export const groupsService = {
         rank: idx + 1,
       }));
   },
+
+  // 6. Eliminar un grupo privado por completo (borra miembros y luego el grupo)
+  async deleteGroup(groupId: string): Promise<void> {
+    // 1. Borrar todos los miembros de group_members
+    const { error: membersError } = await supabase
+      .from("group_members")
+      .delete()
+      .eq("group_id", groupId);
+
+    if (membersError) throw membersError;
+
+    // 2. Borrar el grupo en sí de groups
+    const { error: groupError } = await supabase
+      .from("groups")
+      .delete()
+      .eq("id", groupId);
+
+    if (groupError) throw groupError;
+  },
 };
