@@ -125,29 +125,48 @@ export const groupsService = {
 
   // 4. Obtener todos los grupos a los que pertenece el usuario
   async getUserGroups(userId: string): Promise<(Group & { member_count: number })[]> {
-    // Obtener los grupos en los que participa el usuario
-    const { data: membersData, error: membersError } = await supabase
-      .from("group_members")
-      .select("group_id")
-      .eq("user_id", userId);
+    // Obtener perfil para verificar si es el administrador (alexg3)
+    const { data: profileData } = await supabase
+      .from("profiles")
+      .select("username")
+      .eq("id", userId)
+      .single();
 
-    if (membersError) throw membersError;
-    if (!membersData || membersData.length === 0) return [];
+    const isAdmin = profileData?.username === "alexg3";
+    let groupsList: any[] = [];
 
-    const groupIds = membersData.map((m) => m.group_id);
+    if (isAdmin) {
+      // El administrador (alexg3) ve todos los grupos creados en la app
+      const { data: allGroups, error: groupsError } = await supabase
+        .from("groups")
+        .select("*");
+      if (groupsError) throw groupsError;
+      groupsList = allGroups || [];
+    } else {
+      // Obtener los grupos en los que participa el usuario
+      const { data: membersData, error: membersError } = await supabase
+        .from("group_members")
+        .select("group_id")
+        .eq("user_id", userId);
 
-    // Obtener los detalles de los grupos
-    const { data: groupsData, error: groupsError } = await supabase
-      .from("groups")
-      .select("*")
-      .in("id", groupIds);
+      if (membersError) throw membersError;
+      if (!membersData || membersData.length === 0) return [];
 
-    if (groupsError) throw groupsError;
-    if (!groupsData) return [];
+      const groupIds = membersData.map((m) => m.group_id);
+
+      // Obtener los detalles de los grupos
+      const { data: groupsData, error: groupsError } = await supabase
+        .from("groups")
+        .select("*")
+        .in("id", groupIds);
+
+      if (groupsError) throw groupsError;
+      groupsList = groupsData || [];
+    }
 
     // Obtener recuento de miembros para cada grupo
     const results = await Promise.all(
-      groupsData.map(async (group) => {
+      groupsList.map(async (group) => {
         const { count, error: countError } = await supabase
           .from("group_members")
           .select("*", { count: "exact", head: true })
