@@ -103,7 +103,8 @@ function RankingPage() {
     id: groupLeaderboard[0].id,
     exactCount: groupLeaderboard[0].exactCount,
     correctCount: groupLeaderboard[0].correctCount,
-    championPick: null,
+    championPick: groupLeaderboard[0].championPick || null,
+    predictions: groupLeaderboard[0].predictions,
   } : undefined;
 
   const gSecond = groupLeaderboard[1] ? {
@@ -117,7 +118,8 @@ function RankingPage() {
     id: groupLeaderboard[1].id,
     exactCount: groupLeaderboard[1].exactCount,
     correctCount: groupLeaderboard[1].correctCount,
-    championPick: null,
+    championPick: groupLeaderboard[1].championPick || null,
+    predictions: groupLeaderboard[1].predictions,
   } : undefined;
 
   const gThird = groupLeaderboard[2] ? {
@@ -131,7 +133,8 @@ function RankingPage() {
     id: groupLeaderboard[2].id,
     exactCount: groupLeaderboard[2].exactCount,
     correctCount: groupLeaderboard[2].correctCount,
-    championPick: null,
+    championPick: groupLeaderboard[2].championPick || null,
+    predictions: groupLeaderboard[2].predictions,
   } : undefined;
 
   const handleCreateGroup = async (e: React.FormEvent) => {
@@ -455,7 +458,8 @@ function RankingPage() {
                           id: p.id,
                           exactCount: p.exactCount,
                           correctCount: p.correctCount,
-                          championPick: null,
+                          championPick: p.championPick || null,
+                          predictions: p.predictions,
                         };
                         return (
                           <li

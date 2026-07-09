@@ -59,3 +59,10 @@ Se han implementado y verificado las siguientes mejoras en la quiniela **Golazo 
   1. Limpiar/eliminar todos los archivos de avatar anteriores que el usuario tenga en storage para evitar acumular basura.
   2. Generar un nombre de archivo único con marca de tiempo (`avatar_[timestamp].ext`) al guardar en Supabase Storage, forzando al CDN a saltarse el caché al cambiar de ruta o actualizar.
   3. Ejecutar correctamente `refreshProfile()` de manera síncrona en el estado para actualizar todas las vistas de inmediato sin necesidad de recargar la página.
+
+## 12. Sincronización del Campeón Predicho en la Clasificación/Ranking (`leaderboard.ts`, `groups.ts`, `ranking.tsx`)
+- **Problema:** Al cambiar el campeón predicho (por ejemplo, de Brasil a Francia), la bandera/país de los usuarios en la página de Clasificación (Ranking Global y Grupos Privados) no se actualizaba y seguía mostrando la Selección Favorita (o el campeón anterior). Además, la clasificación de grupos privados decodificaba incorrectamente el índice del campeón predicho al usar una lista de códigos incompleta, y no pasaba los detalles de predicciones al modal de detalles del usuario al hacer clic.
+- **Solución:** 
+  1. Actualizamos `getSupabaseLeaderboard` y `getGroupLeaderboard` para que la propiedad `country` de cada entrada devuelva el campeón predicho (`championCode`) del usuario, con fallback a su selección favorita (`profile.country_code`).
+  2. Corregimos en `groups.ts` la definición de `sortedTeamCodes` para usar la lista ordenada de todos los equipos del mundial, permitiendo decodificar correctamente el índice del campeón de la base de datos.
+  3. Habilitamos la visualización detallada del campeón predicho y el historial de marcadores de los miembros de grupos privados en el drawer de detalles del ranking al pasar `championPick` y `predictions` en el listado del grupo y el podio.

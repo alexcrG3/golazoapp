@@ -1,5 +1,6 @@
 import { supabase } from "./supabase";
 import { calculateMatchPoints } from "./predictionsStore";
+import { teams } from "@/data/teams";
 
 export type Group = {
   id: string;
@@ -18,6 +19,8 @@ export type GroupMemberLeaderboardEntry = {
   exactCount: number;
   correctCount: number;
   id: string;
+  championPick?: string | null;
+  predictions?: Record<string, { home: number; away: number }>;
 };
 
 // Generar código de invitación aleatorio (6 letras/números en mayúscula)
@@ -228,14 +231,18 @@ export const groupsService = {
 
     if (predError) throw predError;
 
-    // Listado de códigos de selección ordenados
-    const sortedTeamCodes = [...profiles]
-      .map((p) => p.country_code)
-      .filter(Boolean);
+    // Listado de códigos de selección ordenados (para decodificar el índice de la predicción de campeón)
+    const sortedTeamCodes = [...teams].map((t) => t.code).sort();
 
     // Calcular puntos para cada miembro
     const entries: Omit<GroupMemberLeaderboardEntry, "rank">[] = profiles.map((profile) => {
       const userPreds = (predictions || []).filter((p) => p.user_id === profile.id);
+      const predsRecord: Record<string, { home: number; away: number }> = {};
+      userPreds.forEach((p) => {
+        if (p.match_id !== "champion") {
+          predsRecord[p.match_id] = { home: p.home_score, away: p.away_score };
+        }
+      });
 
       let pts = 0;
       let correct = 0;
@@ -295,11 +302,13 @@ export const groupsService = {
       return {
         id: profile.id,
         name: profile.full_name || profile.username || "Usuario sin nombre",
-        country: profile.country_code || "cr",
+        country: championCode || profile.country_code || "cr",
         points: pts,
         accuracy,
         exactCount: exact,
         correctCount: Math.max(0, correct - exact),
+        championPick: championCode,
+        predictions: predsRecord,
       };
     });
 

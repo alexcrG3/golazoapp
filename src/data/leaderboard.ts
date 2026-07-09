@@ -293,7 +293,7 @@ export async function getSupabaseLeaderboard(
       return {
         rank: 0,
         name: profile.full_name || profile.username,
-        country: profile.country_code || "cr",
+        country: championCode || profile.country_code || "cr",
         points: pts,
         accuracy,
         streak,
