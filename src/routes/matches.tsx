@@ -5,7 +5,13 @@ import { useQuery } from "@tanstack/react-query";
 import { AppShell } from "@/components/AppShell";
 import { Flag } from "@/components/Flag";
 import { MatchCard } from "@/components/MatchCard";
-import { groups as staticGroups, matchesByGroup, matchesByStage, computeStandings, matches as staticMatches } from "@/data";
+import {
+  groups as staticGroups,
+  matchesByGroup,
+  matchesByStage,
+  computeStandings,
+  matches as staticMatches,
+} from "@/data";
 import type { Match, Stage, Group } from "@/data";
 import { TimeFormatToggle } from "@/contexts/TimeFormat";
 import { fetchRealGroupsAndMatches } from "@/lib/api-football";
@@ -24,7 +30,10 @@ export const Route = createFileRoute("/matches")({
   head: () => ({
     meta: [
       { title: "Partidos · Golazo" },
-      { name: "description", content: "Todos los partidos del Mundial 2026, grupo por grupo y fase final." },
+      {
+        name: "description",
+        content: "Todos los partidos del Mundial 2026, grupo por grupo y fase final.",
+      },
     ],
   }),
   component: MatchesPage,
@@ -42,7 +51,11 @@ const knockoutTabs: { key: Stage; label: string }[] = [
 function MatchesPage() {
   const { open: openSidebar } = useSidebar();
   const { user, profile } = useAuth();
-  const { data: apiData, isLoading, isFetching } = useQuery({
+  const {
+    data: apiData,
+    isLoading,
+    isFetching,
+  } = useQuery({
     queryKey: ["realMatchesAndGroups"],
     queryFn: fetchRealGroupsAndMatches,
     retry: 2,
@@ -76,7 +89,7 @@ function MatchesPage() {
     if (apiData?.groups && apiData.groups.length > 0) {
       setActiveGroup((prev) => {
         const exists = apiData.groups.some((g) => g.name === prev);
-        return exists ? prev : (apiData.groups[0]?.name || prev);
+        return exists ? prev : apiData.groups[0]?.name || prev;
       });
     }
   }, [apiData]);
@@ -135,7 +148,9 @@ function MatchesPage() {
         >
           <Trophy className="h-5 w-5 text-[oklch(0.9_0.18_85)]" />
           <div className="flex-1 text-xs">
-            <div className="font-bold uppercase tracking-widest text-[oklch(0.9_0.18_85)]">Campeón del Mundo · 20 pts</div>
+            <div className="font-bold uppercase tracking-widest text-[oklch(0.9_0.18_85)]">
+              Campeón del Mundo · 20 pts
+            </div>
             <div className="text-white/60">Elige a tu favorito para levantar la copa →</div>
           </div>
         </Link>
@@ -160,7 +175,9 @@ function MatchesPage() {
       <div className="mt-4 px-5">
         {mode === "group" ? (
           <div>
-            <div className="text-[10px] font-bold uppercase tracking-widest text-white/40 mb-2">Selecciona un Grupo</div>
+            <div className="text-[10px] font-bold uppercase tracking-widest text-white/40 mb-2">
+              Selecciona un Grupo
+            </div>
             <div className="grid grid-cols-6 gap-2">
               {groupsList.map((g) => {
                 const active = g.name === activeGroup;
@@ -169,9 +186,11 @@ function MatchesPage() {
                     key={g.name}
                     onClick={() => setActiveGroup(g.name)}
                     className={`aspect-square rounded-2xl text-xs font-bold uppercase tracking-wide transition active:scale-90 flex items-center justify-center
-                      ${active 
-                        ? "bg-primary text-primary-foreground font-extrabold scale-105 neon-glow ring-2 ring-primary/40" 
-                        : "glass text-white/75 hover:text-white hover:bg-white/10"}`}
+                      ${
+                        active
+                          ? "bg-primary text-primary-foreground font-extrabold scale-105 neon-glow ring-2 ring-primary/40"
+                          : "glass text-white/75 hover:text-white hover:bg-white/10"
+                      }`}
                   >
                     {g.name}
                   </button>
@@ -181,7 +200,9 @@ function MatchesPage() {
           </div>
         ) : (
           <div>
-            <div className="text-[10px] font-bold uppercase tracking-widest text-white/40 mb-2">Fase Eliminatoria</div>
+            <div className="text-[10px] font-bold uppercase tracking-widest text-white/40 mb-2">
+              Fase Eliminatoria
+            </div>
             <div className="grid grid-cols-3 gap-2">
               {knockoutTabs.map((t) => {
                 const active = t.key === activeStage;
@@ -190,9 +211,11 @@ function MatchesPage() {
                     key={t.key}
                     onClick={() => setActiveStage(t.key)}
                     className={`rounded-2xl py-2.5 px-1 text-[11px] font-bold uppercase tracking-wider transition active:scale-95 text-center truncate
-                      ${active 
-                        ? "bg-white text-black font-extrabold ring-2 ring-white/20" 
-                        : "glass text-white/70 hover:text-white hover:bg-white/10"}`}
+                      ${
+                        active
+                          ? "bg-white text-black font-extrabold ring-2 ring-white/20"
+                          : "glass text-white/70 hover:text-white hover:bg-white/10"
+                      }`}
                   >
                     {t.label}
                   </button>
@@ -203,17 +226,28 @@ function MatchesPage() {
         )}
       </div>
 
-
       {mode === "group" ? (
         <GroupView groupName={activeGroup} matchesList={matchesList} groupsList={groupsList} />
       ) : (
-        <StageView stage={activeStage} label={knockoutTabs.find((t) => t.key === activeStage)!.label} matchesList={matchesList} />
+        <StageView
+          stage={activeStage}
+          label={knockoutTabs.find((t) => t.key === activeStage)!.label}
+          matchesList={matchesList}
+        />
       )}
     </AppShell>
   );
 }
 
-function GroupView({ groupName, matchesList, groupsList }: { groupName: string; matchesList: Match[]; groupsList: Group[] }) {
+function GroupView({
+  groupName,
+  matchesList,
+  groupsList,
+}: {
+  groupName: string;
+  matchesList: Match[];
+  groupsList: Group[];
+}) {
   const rows = computeStandings(groupName, matchesList, groupsList);
   const groupMatches = matchesByGroup(groupName, matchesList);
   return (
@@ -240,7 +274,9 @@ function GroupView({ groupName, matchesList, groupsList }: { groupName: string; 
                 key={r.team.code}
                 className="grid grid-cols-[16px_1fr_repeat(4,_18px)_22px_22px] sm:grid-cols-[28px_1fr_repeat(5,_28px)_36px] items-center gap-1 sm:gap-2 px-3 sm:px-5 py-3 text-[11px] text-white/70"
               >
-                <span className={`font-display ${i < 2 ? "text-primary" : "text-white/40"}`}>{i + 1}</span>
+                <span className={`font-display ${i < 2 ? "text-primary" : "text-white/40"}`}>
+                  {i + 1}
+                </span>
                 <div className="flex min-w-0 items-center gap-1 sm:gap-2">
                   <Flag code={r.team.code} size={20} className="flex-shrink-0 sm:hidden" />
                   <Flag code={r.team.code} size={28} className="flex-shrink-0 hidden sm:block" />
@@ -251,7 +287,9 @@ function GroupView({ groupName, matchesList, groupsList }: { groupName: string; 
                 <span className="text-center">{r.e}</span>
                 <span className="text-center">{r.p}</span>
                 <span className="text-center">{r.dg > 0 ? `+${r.dg}` : r.dg}</span>
-                <span className="text-right font-display text-sm sm:text-base text-primary">{r.pts}</span>
+                <span className="text-right font-display text-sm sm:text-base text-primary">
+                  {r.pts}
+                </span>
               </li>
             ))}
           </ul>
@@ -271,7 +309,15 @@ function GroupView({ groupName, matchesList, groupsList }: { groupName: string; 
   );
 }
 
-function StageView({ stage, label, matchesList }: { stage: Stage; label: string; matchesList: Match[] }) {
+function StageView({
+  stage,
+  label,
+  matchesList,
+}: {
+  stage: Stage;
+  label: string;
+  matchesList: Match[];
+}) {
   const list = matchesByStage(stage, matchesList);
   return (
     <section className="mt-6 space-y-4 px-4">

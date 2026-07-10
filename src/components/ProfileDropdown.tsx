@@ -32,9 +32,7 @@ export function ProfileDropdown() {
   const displayProfile = mounted ? profile : null;
 
   if (!mounted || loading) {
-    return (
-      <div className="h-9 w-9 animate-pulse rounded-full bg-white/10 ring-2 ring-white/15" />
-    );
+    return <div className="h-9 w-9 animate-pulse rounded-full bg-white/10 ring-2 ring-white/15" />;
   }
 
   if (!displayUser) {
@@ -106,7 +104,11 @@ export function ProfileDropdown() {
                     className="h-10 w-10 rounded-full object-cover ring-2 ring-white/10"
                   />
                 ) : (
-                  <Flag code={displayProfile.country_code} size={36} className="ring-2 ring-white/10" />
+                  <Flag
+                    code={displayProfile.country_code}
+                    size={36}
+                    className="ring-2 ring-white/10"
+                  />
                 )
               ) : (
                 <div className="grid h-10 w-10 place-items-center rounded-full bg-white/10 ring-2 ring-white/10">
@@ -118,9 +120,7 @@ export function ProfileDropdown() {
               <span className="font-display text-sm font-bold text-white truncate">
                 {finalProfile.full_name}
               </span>
-              <span className="text-[10px] text-white/50 truncate">
-                @{finalProfile.username}
-              </span>
+              <span className="text-[10px] text-white/50 truncate">@{finalProfile.username}</span>
             </div>
           </div>
 

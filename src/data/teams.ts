@@ -92,6 +92,6 @@ export const teamByCode = (code: string): Team =>
 export const flagUrl = (code: string, size: 80 | 160 = 80) =>
   code === "tbd"
     ? `data:image/svg+xml;utf8,${encodeURIComponent(
-        `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 80'><rect width='80' height='80' fill='%23111'/><text x='50%' y='55%' font-family='sans-serif' font-size='28' fill='%2300d68f' text-anchor='middle'>?</text></svg>`
+        `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 80'><rect width='80' height='80' fill='%23111'/><text x='50%' y='55%' font-family='sans-serif' font-size='28' fill='%2300d68f' text-anchor='middle'>?</text></svg>`,
       )}`
     : `https://flagcdn.com/w${size}/${code}.png`;

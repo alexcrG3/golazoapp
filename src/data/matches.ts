@@ -59,9 +59,27 @@ const isoFromOffset = (dayOffset: number, hour: number): string => {
 // Round-robin para grupo de 4 [a,b,c,d]:
 // J1: a-b, c-d / J2: a-c, d-b / J3: a-d, b-c
 const roundRobinPairs = (codes: string[]) => [
-  { round: "Jornada 1", pairs: [[codes[0], codes[1]], [codes[2], codes[3]]] },
-  { round: "Jornada 2", pairs: [[codes[0], codes[2]], [codes[3], codes[1]]] },
-  { round: "Jornada 3", pairs: [[codes[0], codes[3]], [codes[1], codes[2]]] },
+  {
+    round: "Jornada 1",
+    pairs: [
+      [codes[0], codes[1]],
+      [codes[2], codes[3]],
+    ],
+  },
+  {
+    round: "Jornada 2",
+    pairs: [
+      [codes[0], codes[2]],
+      [codes[3], codes[1]],
+    ],
+  },
+  {
+    round: "Jornada 3",
+    pairs: [
+      [codes[0], codes[3]],
+      [codes[1], codes[2]],
+    ],
+  },
 ];
 
 const buildGroupStage = (): Match[] => {
@@ -71,7 +89,7 @@ const buildGroupStage = (): Match[] => {
     const rounds = roundRobinPairs(g.teamCodes);
     rounds.forEach((r, ri) => {
       r.pairs.forEach((pair, pi) => {
-        const dayOffset = gi % 12 + ri * 4 + Math.floor(gi / 6); // dispersa partidos
+        const dayOffset = (gi % 12) + ri * 4 + Math.floor(gi / 6); // dispersa partidos
         const hour = 17 + pi * 3; // 17h / 20h UTC
         const venue = venues[venueIdx % venues.length];
         venueIdx++;
@@ -108,7 +126,7 @@ const buildKnockout = (): Match[] => {
     round: string,
     count: number,
     baseDay: number,
-    labeler: (i: number) => [string, string]
+    labeler: (i: number) => [string, string],
   ) => {
     for (let i = 0; i < count; i++) {
       const venue = venues[venueIdx % venues.length];
@@ -181,5 +199,3 @@ export const matchesByDay = (list: Match[]) => {
   }
   return Array.from(map.entries()).map(([day, items]) => ({ day, items }));
 };
-
-

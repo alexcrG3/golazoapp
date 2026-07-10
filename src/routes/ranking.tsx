@@ -1,15 +1,38 @@
 import { useState, useEffect } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Crown, Flame, Trophy, Menu, User, Sparkles, Users, Plus, Clipboard, ArrowLeft, LogOut, Loader2, Trash2 } from "lucide-react";
+import {
+  Crown,
+  Flame,
+  Trophy,
+  Menu,
+  User,
+  Sparkles,
+  Users,
+  Plus,
+  Clipboard,
+  ArrowLeft,
+  LogOut,
+  Loader2,
+  Trash2,
+} from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { AppShell } from "@/components/AppShell";
 import { Flag } from "@/components/Flag";
 import { leaderboard, totalPredictors, type LeaderboardEntry, teamByCode } from "@/data";
 import { fetchRealGroupsAndMatches } from "@/lib/api-football";
-import { getDynamicLeaderboard, getSupabaseLeaderboard, getOtherPrizesStatus } from "@/data/leaderboard";
+import {
+  getDynamicLeaderboard,
+  getSupabaseLeaderboard,
+  getOtherPrizesStatus,
+} from "@/data/leaderboard";
 import { useAuth } from "@/hooks/useAuth";
 import { useSidebar } from "@/contexts/SidebarContext";
-import { useChampion, calculateMatchPoints, isPredictionExact, isPredictionCorrect } from "@/lib/predictionsStore";
+import {
+  useChampion,
+  calculateMatchPoints,
+  isPredictionExact,
+  isPredictionCorrect,
+} from "@/lib/predictionsStore";
 import { ProfileDropdown } from "@/components/ProfileDropdown";
 import { groupsService } from "@/lib/groups";
 import { toast } from "sonner";
@@ -68,7 +91,11 @@ function RankingPage() {
   });
 
   // Query para obtener los grupos a los que pertenece el usuario
-  const { data: userGroups = [], refetch: refetchGroups, isLoading: userGroupsLoading } = useQuery({
+  const {
+    data: userGroups = [],
+    refetch: refetchGroups,
+    isLoading: userGroupsLoading,
+  } = useQuery({
     queryKey: ["userGroups", user?.id],
     queryFn: () => groupsService.getUserGroups(user!.id),
     enabled: !!user?.id,
@@ -92,50 +119,56 @@ function RankingPage() {
   }, [user, isOriginalUser, activeGroupId, userGroups]);
 
   // Mapear top 3 del grupo para el podio
-  const gFirst = groupLeaderboard[0] ? {
-    rank: 1,
-    name: groupLeaderboard[0].name,
-    country: groupLeaderboard[0].country,
-    points: groupLeaderboard[0].points,
-    accuracy: groupLeaderboard[0].accuracy,
-    streak: 0,
-    isYou: groupLeaderboard[0].id === user?.id,
-    id: groupLeaderboard[0].id,
-    exactCount: groupLeaderboard[0].exactCount,
-    correctCount: groupLeaderboard[0].correctCount,
-    championPick: groupLeaderboard[0].championPick || null,
-    predictions: groupLeaderboard[0].predictions,
-  } : undefined;
+  const gFirst = groupLeaderboard[0]
+    ? {
+        rank: 1,
+        name: groupLeaderboard[0].name,
+        country: groupLeaderboard[0].country,
+        points: groupLeaderboard[0].points,
+        accuracy: groupLeaderboard[0].accuracy,
+        streak: 0,
+        isYou: groupLeaderboard[0].id === user?.id,
+        id: groupLeaderboard[0].id,
+        exactCount: groupLeaderboard[0].exactCount,
+        correctCount: groupLeaderboard[0].correctCount,
+        championPick: groupLeaderboard[0].championPick || null,
+        predictions: groupLeaderboard[0].predictions,
+      }
+    : undefined;
 
-  const gSecond = groupLeaderboard[1] ? {
-    rank: 2,
-    name: groupLeaderboard[1].name,
-    country: groupLeaderboard[1].country,
-    points: groupLeaderboard[1].points,
-    accuracy: groupLeaderboard[1].accuracy,
-    streak: 0,
-    isYou: groupLeaderboard[1].id === user?.id,
-    id: groupLeaderboard[1].id,
-    exactCount: groupLeaderboard[1].exactCount,
-    correctCount: groupLeaderboard[1].correctCount,
-    championPick: groupLeaderboard[1].championPick || null,
-    predictions: groupLeaderboard[1].predictions,
-  } : undefined;
+  const gSecond = groupLeaderboard[1]
+    ? {
+        rank: 2,
+        name: groupLeaderboard[1].name,
+        country: groupLeaderboard[1].country,
+        points: groupLeaderboard[1].points,
+        accuracy: groupLeaderboard[1].accuracy,
+        streak: 0,
+        isYou: groupLeaderboard[1].id === user?.id,
+        id: groupLeaderboard[1].id,
+        exactCount: groupLeaderboard[1].exactCount,
+        correctCount: groupLeaderboard[1].correctCount,
+        championPick: groupLeaderboard[1].championPick || null,
+        predictions: groupLeaderboard[1].predictions,
+      }
+    : undefined;
 
-  const gThird = groupLeaderboard[2] ? {
-    rank: 3,
-    name: groupLeaderboard[2].name,
-    country: groupLeaderboard[2].country,
-    points: groupLeaderboard[2].points,
-    accuracy: groupLeaderboard[2].accuracy,
-    streak: 0,
-    isYou: groupLeaderboard[2].id === user?.id,
-    id: groupLeaderboard[2].id,
-    exactCount: groupLeaderboard[2].exactCount,
-    correctCount: groupLeaderboard[2].correctCount,
-    championPick: groupLeaderboard[2].championPick || null,
-    predictions: groupLeaderboard[2].predictions,
-  } : undefined;
+  const gThird = groupLeaderboard[2]
+    ? {
+        rank: 3,
+        name: groupLeaderboard[2].name,
+        country: groupLeaderboard[2].country,
+        points: groupLeaderboard[2].points,
+        accuracy: groupLeaderboard[2].accuracy,
+        streak: 0,
+        isYou: groupLeaderboard[2].id === user?.id,
+        id: groupLeaderboard[2].id,
+        exactCount: groupLeaderboard[2].exactCount,
+        correctCount: groupLeaderboard[2].correctCount,
+        championPick: groupLeaderboard[2].championPick || null,
+        predictions: groupLeaderboard[2].predictions,
+      }
+    : undefined;
 
   const handleCreateGroup = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -193,7 +226,9 @@ function RankingPage() {
 
   const handleLeaveGroup = async (groupId: string, groupName: string) => {
     if (!user) return;
-    const confirmLeave = window.confirm(`¿Estás seguro de que quieres salir del grupo "${groupName}"?`);
+    const confirmLeave = window.confirm(
+      `¿Estás seguro de que quieres salir del grupo "${groupName}"?`,
+    );
     if (!confirmLeave) return;
 
     try {
@@ -211,7 +246,9 @@ function RankingPage() {
 
   const handleDeleteGroup = async (groupId: string, groupName: string) => {
     if (!user) return;
-    const confirmDelete = window.confirm(`¿Estás seguro de que quieres ELIMINAR por completo el grupo "${groupName}"? Esta acción no se puede deshacer y sacará a todos los miembros.`);
+    const confirmDelete = window.confirm(
+      `¿Estás seguro de que quieres ELIMINAR por completo el grupo "${groupName}"? Esta acción no se puede deshacer y sacará a todos los miembros.`,
+    );
     if (!confirmDelete) return;
 
     setIsSubmittingGroupAction(true);
@@ -264,13 +301,13 @@ function RankingPage() {
             </button>
             <ProfileDropdown />
           </div>
-          <span className="text-[11px] font-bold uppercase tracking-[0.25em] text-primary block mt-1">Grupo Privado</span>
+          <span className="text-[11px] font-bold uppercase tracking-[0.25em] text-primary block mt-1">
+            Grupo Privado
+          </span>
           <h1 className="font-display mt-1 text-5xl leading-none text-white truncate max-w-[320px]">
             {activeGroup?.name || "Cargando grupo..."}
           </h1>
-          <p className="mt-2 text-sm text-white/55">
-            Clasificación interna e independiente
-          </p>
+          <p className="mt-2 text-sm text-white/55">Clasificación interna e independiente</p>
         </header>
       ) : (
         <>
@@ -288,7 +325,9 @@ function RankingPage() {
             {activeTab === "leaderboard" ? (
               <>
                 <span className="text-[11px] font-bold uppercase tracking-[0.25em] text-primary block mt-1">
-                  {activeGroupId && activeGroup ? `Quiniela: ${activeGroup.name}` : "Ranking Global"}
+                  {activeGroupId && activeGroup
+                    ? `Quiniela: ${activeGroup.name}`
+                    : "Ranking Global"}
                 </span>
                 <div className="flex items-baseline justify-between mt-1">
                   <h1 className="font-display text-5xl leading-none text-white">Clasificación</h1>
@@ -302,30 +341,34 @@ function RankingPage() {
                   )}
                 </div>
                 <p className="mt-2 text-sm text-white/55">
-                  {activeGroupId && activeGroup ? (
-                    `${activeGroup.member_count} ${activeGroup.member_count === 1 ? 'pronosticador' : 'pronosticadores'} compitiendo en este grupo`
-                  ) : dynamicLeaderboard.length > 0 ? (
-                    `${dynamicLeaderboard.length} pronosticadores compitiendo en la quiniela`
-                  ) : (
-                    "Compite con tus amigos en la quiniela"
-                  )}
+                  {activeGroupId && activeGroup
+                    ? `${activeGroup.member_count} ${activeGroup.member_count === 1 ? "pronosticador" : "pronosticadores"} compitiendo en este grupo`
+                    : dynamicLeaderboard.length > 0
+                      ? `${dynamicLeaderboard.length} pronosticadores compitiendo en la quiniela`
+                      : "Compite con tus amigos en la quiniela"}
                 </p>
               </>
             ) : activeTab === "groups" ? (
               <>
-                <span className="text-[11px] font-bold uppercase tracking-[0.25em] text-primary block mt-1">Mis Quinielas</span>
-                <h1 className="font-display mt-1 text-5xl leading-none text-white font-black uppercase">Grupos</h1>
+                <span className="text-[11px] font-bold uppercase tracking-[0.25em] text-primary block mt-1">
+                  Mis Quinielas
+                </span>
+                <h1 className="font-display mt-1 text-5xl leading-none text-white font-black uppercase">
+                  Grupos
+                </h1>
                 <p className="mt-2 text-sm text-white/55">
                   Compite en salas privadas exclusivas con tus amigos
                 </p>
               </>
             ) : (
               <>
-                <span className="text-[11px] font-bold uppercase tracking-[0.25em] text-primary block mt-1">Premios</span>
-                <h1 className="font-display mt-1 text-5xl leading-none text-white">Otros Premios</h1>
-                <p className="mt-2 text-sm text-white/55">
-                  Sorteos y recompensas exclusivas
-                </p>
+                <span className="text-[11px] font-bold uppercase tracking-[0.25em] text-primary block mt-1">
+                  Premios
+                </span>
+                <h1 className="font-display mt-1 text-5xl leading-none text-white">
+                  Otros Premios
+                </h1>
+                <p className="mt-2 text-sm text-white/55">Sorteos y recompensas exclusivas</p>
               </>
             )}
           </header>
@@ -339,10 +382,12 @@ function RankingPage() {
                     setActiveTab("leaderboard");
                   }}
                   className={`flex-1 flex items-center justify-center gap-1.5 rounded-xl py-2.5 text-xs font-bold uppercase tracking-wider transition ${
-                    activeTab === "leaderboard" ? "bg-white text-black font-extrabold" : "text-white/60 hover:text-white"
+                    activeTab === "leaderboard"
+                      ? "bg-white text-black font-extrabold"
+                      : "text-white/60 hover:text-white"
                   }`}
                 >
-                  <Trophy className="h-3.5 w-3.5" /> 
+                  <Trophy className="h-3.5 w-3.5" />
                   {activeGroupId && activeGroup ? activeGroup.name : "Ranking Global"}
                 </button>
                 <button
@@ -350,7 +395,9 @@ function RankingPage() {
                     setActiveTab("groups");
                   }}
                   className={`flex-1 flex items-center justify-center gap-1.5 rounded-xl py-2.5 text-xs font-bold uppercase tracking-wider transition ${
-                    activeTab === "groups" ? "bg-white text-black font-extrabold" : "text-white/60 hover:text-white"
+                    activeTab === "groups"
+                      ? "bg-white text-black font-extrabold"
+                      : "text-white/60 hover:text-white"
                   }`}
                 >
                   <Users className="h-3.5 w-3.5" /> Grupos
@@ -358,7 +405,9 @@ function RankingPage() {
                 <button
                   onClick={() => setActiveTab("prizes")}
                   className={`flex-1 flex items-center justify-center gap-1.5 rounded-xl py-2.5 text-xs font-bold uppercase tracking-wider transition ${
-                    activeTab === "prizes" ? "bg-white text-black font-extrabold" : "text-white/60 hover:text-white"
+                    activeTab === "prizes"
+                      ? "bg-white text-black font-extrabold"
+                      : "text-white/60 hover:text-white"
                   }`}
                 >
                   <Crown className="h-3.5 w-3.5" /> Otros Premios
@@ -389,7 +438,9 @@ function RankingPage() {
               <div className="px-4 mt-6">
                 <div className="glass rounded-3xl p-4 border border-white/5 flex items-center justify-between gap-3">
                   <div>
-                    <span className="text-[10px] font-bold uppercase tracking-widest text-white/40 block">Código para compartir</span>
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-white/40 block">
+                      Código para compartir
+                    </span>
                     <button
                       onClick={() => handleCopyCode(activeGroup.code)}
                       className="mt-1 font-mono font-extrabold text-2xl text-gradient-gold tracking-widest flex items-center gap-1.5 hover:opacity-80 active:scale-95 transition"
@@ -411,8 +462,12 @@ function RankingPage() {
                   )}
 
                   <div className="text-right">
-                    <span className="text-[10px] font-bold uppercase tracking-widest text-white/40 block">Participantes</span>
-                    <span className="font-display text-2xl text-white mt-1 block">{activeGroup.member_count}</span>
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-white/40 block">
+                      Participantes
+                    </span>
+                    <span className="font-display text-2xl text-white mt-1 block">
+                      {activeGroup.member_count}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -421,9 +476,25 @@ function RankingPage() {
               {!groupLeaderboardLoading && groupLeaderboard.length > 0 && (
                 <section className="mt-6 px-4">
                   <div className="grid grid-cols-3 items-end gap-3">
-                    <PodiumCard player={gSecond} place={2} height="h-36" onClick={() => gSecond && setSelectedUser(gSecond)} />
-                    <PodiumCard player={gFirst} place={1} height="h-44" featured onClick={() => gFirst && setSelectedUser(gFirst)} />
-                    <PodiumCard player={gThird} place={3} height="h-32" onClick={() => gThird && setSelectedUser(gThird)} />
+                    <PodiumCard
+                      player={gSecond}
+                      place={2}
+                      height="h-36"
+                      onClick={() => gSecond && setSelectedUser(gSecond)}
+                    />
+                    <PodiumCard
+                      player={gFirst}
+                      place={1}
+                      height="h-44"
+                      featured
+                      onClick={() => gFirst && setSelectedUser(gFirst)}
+                    />
+                    <PodiumCard
+                      player={gThird}
+                      place={3}
+                      height="h-32"
+                      onClick={() => gThird && setSelectedUser(gThird)}
+                    />
                   </div>
                 </section>
               )}
@@ -466,14 +537,24 @@ function RankingPage() {
                             key={p.id}
                             onClick={() => setSelectedUser(entryMock)}
                             className={`flex items-center justify-between px-5 py-3.5 transition cursor-pointer hover:bg-white/5 active:scale-[0.99] ${
-                              p.id === user?.id ? "bg-primary/10 ring-1 ring-primary/30 hover:bg-primary/15" : ""
+                              p.id === user?.id
+                                ? "bg-primary/10 ring-1 ring-primary/30 hover:bg-primary/15"
+                                : ""
                             }`}
                           >
                             <div className="flex min-w-0 items-center gap-3">
-                              <span className={`font-display w-6 text-lg ${p.id === user?.id ? "text-primary" : "text-white/40"}`}>{p.rank}</span>
+                              <span
+                                className={`font-display w-6 text-lg ${p.id === user?.id ? "text-primary" : "text-white/40"}`}
+                              >
+                                {p.rank}
+                              </span>
                               <Flag code={p.country} size={36} />
                               <div className="min-w-0">
-                                <div className={`truncate font-semibold ${p.id === user?.id ? "text-primary" : "text-white"}`}>{p.name}</div>
+                                <div
+                                  className={`truncate font-semibold ${p.id === user?.id ? "text-primary" : "text-white"}`}
+                                >
+                                  {p.name}
+                                </div>
                                 <div className="text-[10px] text-white/55">
                                   {p.accuracy}% prec. · {p.exactCount} exactos
                                 </div>
@@ -493,9 +574,25 @@ function RankingPage() {
               {/* Podium Original */}
               <section className="mt-8 px-4">
                 <div className="grid grid-cols-3 items-end gap-3">
-                  <PodiumCard player={second} place={2} height="h-36" onClick={() => second && setSelectedUser(second)} />
-                  <PodiumCard player={first} place={1} height="h-44" featured onClick={() => first && setSelectedUser(first)} />
-                  <PodiumCard player={third} place={3} height="h-32" onClick={() => third && setSelectedUser(third)} />
+                  <PodiumCard
+                    player={second}
+                    place={2}
+                    height="h-36"
+                    onClick={() => second && setSelectedUser(second)}
+                  />
+                  <PodiumCard
+                    player={first}
+                    place={1}
+                    height="h-44"
+                    featured
+                    onClick={() => first && setSelectedUser(first)}
+                  />
+                  <PodiumCard
+                    player={third}
+                    place={3}
+                    height="h-32"
+                    onClick={() => third && setSelectedUser(third)}
+                  />
                 </div>
               </section>
 
@@ -513,16 +610,22 @@ function RankingPage() {
                           key={p.rank}
                           onClick={() => setSelectedUser(p)}
                           className={`flex items-center justify-between px-5 py-3.5 transition cursor-pointer hover:bg-white/5 active:scale-[0.99] ${
-                            p.isYou ? "bg-primary/10 ring-1 ring-primary/30 hover:bg-primary/15" : ""
+                            p.isYou
+                              ? "bg-primary/10 ring-1 ring-primary/30 hover:bg-primary/15"
+                              : ""
                           }`}
                         >
                           <div className="flex min-w-0 items-center gap-3">
-                            <span className={`font-display w-6 text-lg ${p.isYou ? "text-primary" : "text-white/40"}`}>
+                            <span
+                              className={`font-display w-6 text-lg ${p.isYou ? "text-primary" : "text-white/40"}`}
+                            >
                               {p.rank}
                             </span>
                             <Flag code={p.country} size={36} />
                             <div className="min-w-0">
-                              <div className={`truncate font-semibold ${p.isYou ? "text-primary" : "text-white"}`}>
+                              <div
+                                className={`truncate font-semibold ${p.isYou ? "text-primary" : "text-white"}`}
+                              >
                                 {p.name}
                               </div>
                               <div className="flex items-center gap-2 text-[11px] text-white/55">
@@ -568,7 +671,8 @@ function RankingPage() {
               <Users className="h-10 w-10 text-white/20 mx-auto mb-3" />
               <h4 className="font-display text-base text-white">Quinielas Privadas</h4>
               <p className="text-[11px] text-white/55 mt-2 max-w-[240px] mx-auto leading-relaxed">
-                Debes iniciar sesión para poder crear tu propio grupo privado o unirte al de tus amigos.
+                Debes iniciar sesión para poder crear tu propio grupo privado o unirte al de tus
+                amigos.
               </p>
               <Link
                 to="/profile"
@@ -602,7 +706,9 @@ function RankingPage() {
                   <div className="glass relative overflow-hidden rounded-3xl p-4 border border-white/5 flex flex-col gap-3.5 bg-gradient-to-br from-primary/10 to-transparent">
                     <div className="flex items-start justify-between min-w-0">
                       <div>
-                        <h4 className="font-display text-lg text-white truncate max-w-[200px]">Ranking Global</h4>
+                        <h4 className="font-display text-lg text-white truncate max-w-[200px]">
+                          Ranking Global
+                        </h4>
                         <span className="text-[10px] text-primary font-bold uppercase tracking-wider block mt-0.5">
                           Grupo Original
                         </span>
@@ -623,7 +729,9 @@ function RankingPage() {
                   </div>
                 )}
 
-                <span className="text-[10px] font-bold uppercase tracking-widest text-white/40 block px-1">Mis Grupos Privados</span>
+                <span className="text-[10px] font-bold uppercase tracking-widest text-white/40 block px-1">
+                  Mis Grupos Privados
+                </span>
                 {userGroupsLoading ? (
                   <div className="flex flex-col items-center justify-center py-12 gap-2">
                     <Loader2 className="h-6 w-6 animate-spin text-primary" />
@@ -634,7 +742,8 @@ function RankingPage() {
                     <Users className="h-10 w-10 text-white/20 mx-auto mb-3" />
                     <h4 className="font-display text-base text-white">Ningún grupo activo</h4>
                     <p className="text-[11px] text-white/55 mt-1 max-w-[240px] mx-auto leading-relaxed">
-                      Crea tu propia quiniela privada o únete a una con tus amigos usando un código de invitación.
+                      Crea tu propia quiniela privada o únete a una con tus amigos usando un código
+                      de invitación.
                     </p>
                   </div>
                 ) : (
@@ -646,12 +755,15 @@ function RankingPage() {
                       >
                         <div className="flex items-start justify-between min-w-0">
                           <div>
-                            <h4 className="font-display text-lg text-white truncate max-w-[200px]">{group.name}</h4>
+                            <h4 className="font-display text-lg text-white truncate max-w-[200px]">
+                              {group.name}
+                            </h4>
                             <span className="text-[10px] text-primary font-bold uppercase tracking-wider block mt-0.5">
-                              {group.member_count} {group.member_count === 1 ? "miembro" : "miembros"}
+                              {group.member_count}{" "}
+                              {group.member_count === 1 ? "miembro" : "miembros"}
                             </span>
                           </div>
-                          
+
                           {/* Botón copiar código */}
                           <button
                             onClick={() => handleCopyCode(group.code)}
@@ -699,8 +811,8 @@ function RankingPage() {
           )}
         </section>
       ) : (
-        <OtherPrizesContent 
-          leaderboardData={dynamicLeaderboard} 
+        <OtherPrizesContent
+          leaderboardData={dynamicLeaderboard}
           firstGoalWinner={prizesStatus?.firstGoalWinner || null}
           hatTrickWinners={prizesStatus?.hatTrickWinners || []}
         />
@@ -713,7 +825,11 @@ function RankingPage() {
             {/* Header / Info Personal */}
             <div className="flex items-center justify-between pb-3 border-b border-white/10">
               <div className="flex items-center gap-3 min-w-0">
-                <Flag code={selectedUser.country} size={48} className="ring-2 ring-white/10 shrink-0" />
+                <Flag
+                  code={selectedUser.country}
+                  size={48}
+                  className="ring-2 ring-white/10 shrink-0"
+                />
                 <div className="min-w-0">
                   <h3 className="font-display text-xl text-gradient-gold leading-tight truncate">
                     {selectedUser.name}
@@ -737,7 +853,9 @@ function RankingPage() {
             <div className="mt-4 space-y-5 max-h-[58vh] overflow-y-auto pr-1 scrollbar-thin">
               {/* Puntuación */}
               <div className="bg-white/5 rounded-2xl p-4 border border-white/5 text-center">
-                <span className="text-[10px] font-bold uppercase tracking-widest text-white/40 block">Puntaje Total</span>
+                <span className="text-[10px] font-bold uppercase tracking-widest text-white/40 block">
+                  Puntaje Total
+                </span>
                 <span className="font-display text-4xl text-primary mt-1 block">
                   {selectedUser.points} pts
                 </span>
@@ -745,31 +863,41 @@ function RankingPage() {
 
               {/* Desglose de Puntos */}
               <div className="space-y-2.5">
-                <span className="text-[10px] font-bold uppercase tracking-widest text-white/40 block">Desglose de Puntos</span>
-                
+                <span className="text-[10px] font-bold uppercase tracking-widest text-white/40 block">
+                  Desglose de Puntos
+                </span>
+
                 <div className="flex justify-between items-center text-xs py-1.5 border-b border-white/5">
                   <span className="text-white/70 flex items-center gap-1.5">
-                    <span className="w-2 h-2 rounded-full bg-primary" /> Marcadores Exactos (+3 / +5 pts)
+                    <span className="w-2 h-2 rounded-full bg-primary" /> Marcadores Exactos (+3 / +5
+                    pts)
                   </span>
-                  <span className="font-bold text-white">{selectedUser.exactCount || 0} partidos</span>
+                  <span className="font-bold text-white">
+                    {selectedUser.exactCount || 0} partidos
+                  </span>
                 </div>
-                
+
                 <div className="flex justify-between items-center text-xs py-1.5 border-b border-white/5">
                   <span className="text-white/70 flex items-center gap-1.5">
-                    <span className="w-2 h-2 rounded-full bg-white/40" /> Ganadores Correctos (+1 / +3 pts)
+                    <span className="w-2 h-2 rounded-full bg-white/40" /> Ganadores Correctos (+1 /
+                    +3 pts)
                   </span>
-                  <span className="font-bold text-white">{selectedUser.correctCount || 0} partidos</span>
+                  <span className="font-bold text-white">
+                    {selectedUser.correctCount || 0} partidos
+                  </span>
                 </div>
 
                 <div className="flex justify-between items-center text-xs py-1.5">
                   <span className="text-white/70 flex items-center gap-1.5">
-                    <span className="w-2 h-2 rounded-full bg-[oklch(0.9_0.18_85)]" /> Predicción Campeón (+20 pts)
+                    <span className="w-2 h-2 rounded-full bg-[oklch(0.9_0.18_85)]" /> Predicción
+                    Campeón (+20 pts)
                   </span>
                   <span className="font-bold text-[oklch(0.9_0.18_85)] flex items-center gap-1">
                     {selectedUser.championPick ? (
                       <>
                         <Flag code={selectedUser.championPick} size={16} />
-                        {teamByCode(selectedUser.championPick)?.name || selectedUser.championPick.toUpperCase()}
+                        {teamByCode(selectedUser.championPick)?.name ||
+                          selectedUser.championPick.toUpperCase()}
                       </>
                     ) : (
                       "Sin Elegir"
@@ -780,7 +908,9 @@ function RankingPage() {
 
               {/* Detalle de Puntos por Partido */}
               <div className="space-y-2.5">
-                <span className="text-[10px] font-bold uppercase tracking-widest text-white/40 block">Puntos por Partido</span>
+                <span className="text-[10px] font-bold uppercase tracking-widest text-white/40 block">
+                  Puntos por Partido
+                </span>
                 {(() => {
                   const finishedMatches = matchesList.filter((m) => m.status === "finished");
                   if (finishedMatches.length === 0) {
@@ -790,7 +920,7 @@ function RankingPage() {
                       </div>
                     );
                   }
-                  
+
                   // Mapear partidos con sus respectivos puntos y fechas para ordenamiento
                   const sortedFinished = finishedMatches
                     .map((m) => {
@@ -817,33 +947,46 @@ function RankingPage() {
                         const exact = pred ? isPredictionExact(m, pred) : false;
 
                         return (
-                          <div key={m.id} className="flex items-center justify-between p-2 rounded-xl bg-white/5 border border-white/5 text-[11px] gap-2">
+                          <div
+                            key={m.id}
+                            className="flex items-center justify-between p-2 rounded-xl bg-white/5 border border-white/5 text-[11px] gap-2"
+                          >
                             {/* Teams & Flags */}
                             <div className="flex items-center gap-1 min-w-0 flex-1">
                               <Flag code={m.home.code} size={14} className="shrink-0" />
-                              <span className="font-semibold text-white/80 truncate text-[10px]">{m.home.short}</span>
+                              <span className="font-semibold text-white/80 truncate text-[10px]">
+                                {m.home.short}
+                              </span>
                               <span className="text-white/35 text-[9px] shrink-0">vs</span>
                               <Flag code={m.away.code} size={14} className="shrink-0" />
-                              <span className="font-semibold text-white/80 truncate text-[10px]">{m.away.short}</span>
+                              <span className="font-semibold text-white/80 truncate text-[10px]">
+                                {m.away.short}
+                              </span>
                             </div>
-                            
+
                             {/* Pred vs Real */}
                             <div className="flex items-center gap-1.5 shrink-0 bg-black/20 px-2 py-0.5 rounded-lg text-[9px]">
                               <span className="text-white/40">Pred:</span>
-                              <span className="text-white font-bold">{pred ? `${pred.home}-${pred.away}` : "-"}</span>
+                              <span className="text-white font-bold">
+                                {pred ? `${pred.home}-${pred.away}` : "-"}
+                              </span>
                               <span className="text-white/20">|</span>
                               <span className="text-white/40">Real:</span>
-                              <span className="text-gradient-neon font-extrabold">{m.scoreHome}-{m.scoreAway}</span>
+                              <span className="text-gradient-neon font-extrabold">
+                                {m.scoreHome}-{m.scoreAway}
+                              </span>
                             </div>
 
                             {/* Puntos Badge */}
                             <div className="shrink-0 text-right min-w-[50px]">
                               {pts > 0 ? (
-                                <span className={`px-1.5 py-0.5 rounded-md text-[8px] font-extrabold uppercase tracking-wide ${
-                                  exact 
-                                    ? "bg-green-500/15 text-green-400 ring-1 ring-green-500/20" 
-                                    : "bg-primary/15 text-primary ring-1 ring-primary/20"
-                                }`}>
+                                <span
+                                  className={`px-1.5 py-0.5 rounded-md text-[8px] font-extrabold uppercase tracking-wide ${
+                                    exact
+                                      ? "bg-green-500/15 text-green-400 ring-1 ring-green-500/20"
+                                      : "bg-primary/15 text-primary ring-1 ring-primary/20"
+                                  }`}
+                                >
                                   +{pts} PTS
                                 </span>
                               ) : (
@@ -862,24 +1005,36 @@ function RankingPage() {
 
               {/* Premios y Logros */}
               <div className="space-y-2.5">
-                <span className="text-[10px] font-bold uppercase tracking-widest text-white/40 block">Premios y Logros Ganados</span>
-                
+                <span className="text-[10px] font-bold uppercase tracking-widest text-white/40 block">
+                  Premios y Logros Ganados
+                </span>
+
                 <div className="flex items-center gap-3 p-2.5 rounded-xl bg-white/5 border border-white/5">
                   <span className="text-xl">🏅</span>
                   <div className="min-w-0">
-                    <span className="text-xs font-bold text-white block">Logro "Primer Gol" (Participación)</span>
-                    <span className="text-[10px] text-primary font-semibold">Calificado para todos los sorteos</span>
+                    <span className="text-xs font-bold text-white block">
+                      Logro "Primer Gol" (Participación)
+                    </span>
+                    <span className="text-[10px] text-primary font-semibold">
+                      Calificado para todos los sorteos
+                    </span>
                   </div>
                 </div>
 
                 <div className="flex items-center gap-3 p-2.5 rounded-xl bg-white/5 border border-white/5">
                   <span className="text-xl">🎯</span>
                   <div className="min-w-0">
-                    <span className="text-xs font-bold text-white block">Logro "Hat-Trick" (Racha Activa)</span>
+                    <span className="text-xs font-bold text-white block">
+                      Logro "Hat-Trick" (Racha Activa)
+                    </span>
                     {selectedUser.maxStreak && selectedUser.maxStreak >= 3 ? (
-                      <span className="text-[10px] text-[oklch(0.9_0.18_85)] font-bold">🏆 ¡Desbloqueado! Racha récord de {selectedUser.maxStreak}</span>
+                      <span className="text-[10px] text-[oklch(0.9_0.18_85)] font-bold">
+                        🏆 ¡Desbloqueado! Racha récord de {selectedUser.maxStreak}
+                      </span>
                     ) : (
-                      <span className="text-[10px] text-white/45">No desbloqueado (Racha máx: {selectedUser.maxStreak || 0}/3)</span>
+                      <span className="text-[10px] text-white/45">
+                        No desbloqueado (Racha máx: {selectedUser.maxStreak || 0}/3)
+                      </span>
                     )}
                   </div>
                 </div>
@@ -901,11 +1056,15 @@ function RankingPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
           <div className="glass-strong w-full max-w-sm overflow-hidden rounded-3xl p-6 relative border border-white/10 shadow-2xl animate-in fade-in zoom-in duration-200">
             <h3 className="font-display text-xl text-white mb-1">Crear Grupo Privado</h3>
-            <p className="text-xs text-white/50 mb-4">Crea una quiniela cerrada para competir con tu gente.</p>
-            
+            <p className="text-xs text-white/50 mb-4">
+              Crea una quiniela cerrada para competir con tu gente.
+            </p>
+
             <form onSubmit={handleCreateGroup} className="space-y-4">
               <div className="space-y-1.5">
-                <label className="text-[10px] uppercase tracking-widest text-white/50 block font-semibold">Nombre del Grupo</label>
+                <label className="text-[10px] uppercase tracking-widest text-white/50 block font-semibold">
+                  Nombre del Grupo
+                </label>
                 <input
                   type="text"
                   value={newGroupName}
@@ -917,7 +1076,7 @@ function RankingPage() {
                   disabled={isSubmittingGroupAction}
                 />
               </div>
-              
+
               <div className="flex items-center gap-3 pt-2">
                 <button
                   type="button"
@@ -946,11 +1105,15 @@ function RankingPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
           <div className="glass-strong w-full max-w-sm overflow-hidden rounded-3xl p-6 relative border border-white/10 shadow-2xl animate-in fade-in zoom-in duration-200">
             <h3 className="font-display text-xl text-white mb-1">Unirme a un Grupo</h3>
-            <p className="text-xs text-white/50 mb-4">Ingresa el código alfanumérico para ingresar a la quiniela privada.</p>
-            
+            <p className="text-xs text-white/50 mb-4">
+              Ingresa el código alfanumérico para ingresar a la quiniela privada.
+            </p>
+
             <form onSubmit={handleJoinGroup} className="space-y-4">
               <div className="space-y-1.5">
-                <label className="text-[10px] uppercase tracking-widest text-white/50 block font-semibold">Código de Invitación</label>
+                <label className="text-[10px] uppercase tracking-widest text-white/50 block font-semibold">
+                  Código de Invitación
+                </label>
                 <input
                   type="text"
                   value={joinGroupCode}
@@ -962,7 +1125,7 @@ function RankingPage() {
                   disabled={isSubmittingGroupAction}
                 />
               </div>
-              
+
               <div className="flex items-center gap-3 pt-2">
                 <button
                   type="button"
@@ -1013,7 +1176,7 @@ function PodiumCard({
   const displayPoints = player?.points !== undefined ? player.points : "-";
 
   return (
-    <div 
+    <div
       onClick={!isVacant ? onClick : undefined}
       className={`flex flex-col items-center gap-2 ${!isVacant ? "cursor-pointer active:scale-[0.98] transition" : ""}`}
     >
@@ -1039,14 +1202,21 @@ function PodiumCard({
       </div>
       <div className="text-center w-full px-1">
         <div className="truncate text-[11px] font-semibold text-white/70">{displayName}</div>
-        <div className="font-display text-base leading-none text-primary mt-0.5">{displayPoints}</div>
+        <div className="font-display text-base leading-none text-primary mt-0.5">
+          {displayPoints}
+        </div>
       </div>
       <div
         className={`glass relative flex w-full ${height} flex-col items-center justify-end rounded-2xl pb-3
           ${featured ? "neon-glow" : ""}`}
       >
-        <div className="absolute inset-x-0 top-0 pitch-lines rounded-t-2xl" style={{ height: "100%" }} />
-        <span className={`font-display relative text-6xl leading-none ${colors[place]}`}>{place}</span>
+        <div
+          className="absolute inset-x-0 top-0 pitch-lines rounded-t-2xl"
+          style={{ height: "100%" }}
+        />
+        <span className={`font-display relative text-6xl leading-none ${colors[place]}`}>
+          {place}
+        </span>
       </div>
     </div>
   );
@@ -1122,33 +1292,46 @@ function OtherPrizesContent({
           <h3 className="font-display text-xl text-white">Premio Especial: Campeón</h3>
         </div>
         <p className="text-xs text-white/60 leading-relaxed">
-          Se otorga a todos los participantes que acierten correctamente qué selección nacional levantará la copa del mundo. ¡Suma 20 puntos adicionales!
+          Se otorga a todos los participantes que acierten correctamente qué selección nacional
+          levantará la copa del mundo. ¡Suma 20 puntos adicionales!
         </p>
 
         {/* Elección del usuario */}
         <div className="p-3.5 rounded-xl bg-white/5 border border-white/10 flex items-center justify-between">
           <div>
-            <span className="text-[10px] font-bold uppercase tracking-widest text-white/40 block">Tu Predicción</span>
+            <span className="text-[10px] font-bold uppercase tracking-widest text-white/40 block">
+              Tu Predicción
+            </span>
             {champion ? (
               <div className="flex items-center gap-2 mt-1">
                 <Flag code={champion.code} size={20} />
                 <span className="font-bold text-white text-sm">{champion.name}</span>
               </div>
             ) : (
-              <span className="font-semibold text-white/55 text-sm mt-1 block">Sin elegir todavía</span>
+              <span className="font-semibold text-white/55 text-sm mt-1 block">
+                Sin elegir todavía
+              </span>
             )}
           </div>
-          <Link to="/champion" className="text-xs font-semibold uppercase tracking-widest text-primary hover:underline">
+          <Link
+            to="/champion"
+            className="text-xs font-semibold uppercase tracking-widest text-primary hover:underline"
+          >
             {champion ? "Cambiar" : "Elegir"}
           </Link>
         </div>
 
         {/* Favoritos de la comunidad */}
         <div className="space-y-2">
-          <span className="text-[10px] font-bold uppercase tracking-widest text-white/40 block">Favoritos de la Comunidad</span>
+          <span className="text-[10px] font-bold uppercase tracking-widest text-white/40 block">
+            Favoritos de la Comunidad
+          </span>
           <div className="grid grid-cols-2 gap-2.5">
             {popularChoices.map((c) => (
-              <div key={c.code} className="flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/5">
+              <div
+                key={c.code}
+                className="flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/5"
+              >
                 <div className="flex items-center gap-2">
                   <Flag code={c.code} size={20} />
                   <span className="text-xs font-semibold text-white">{c.name}</span>
@@ -1167,7 +1350,8 @@ function OtherPrizesContent({
           <h3 className="font-display text-xl text-white">Logro: Hat-Trick</h3>
         </div>
         <p className="text-xs text-white/60 leading-relaxed">
-          Premio especial de alta precisión otorgado de forma dinámica a quienes logren encadenar **3 o más marcadores exactos consecutivos**.
+          Premio especial de alta precisión otorgado de forma dinámica a quienes logren encadenar
+          **3 o más marcadores exactos consecutivos**.
         </p>
 
         {/* Ganadores de Hat-Trick */}
@@ -1177,7 +1361,8 @@ function OtherPrizesContent({
           </span>
           {hatTrickWinners.length === 0 ? (
             <p className="text-xs text-white/45 italic bg-white/5 rounded-2xl px-4 py-3 border border-white/5">
-              Ningún jugador ha desbloqueado este logro aún (se requiere racha de 3 aciertos exactos).
+              Ningún jugador ha desbloqueado este logro aún (se requiere racha de 3 aciertos
+              exactos).
             </p>
           ) : (
             <div className="divide-y divide-white/5 bg-primary/5 rounded-2xl overflow-hidden border border-primary/20">
@@ -1202,7 +1387,9 @@ function OtherPrizesContent({
             Rachas Activas Actualmente
           </span>
           {streakPlayers.length === 0 ? (
-            <p className="text-xs text-white/40 italic">Ningún jugador tiene una racha activa de marcadores exactos actualmente.</p>
+            <p className="text-xs text-white/40 italic">
+              Ningún jugador tiene una racha activa de marcadores exactos actualmente.
+            </p>
           ) : (
             <div className="divide-y divide-white/5 bg-white/5 rounded-2xl overflow-hidden border border-white/5">
               {streakPlayers.slice(0, 5).map((p) => (
@@ -1229,7 +1416,8 @@ function OtherPrizesContent({
           <h3 className="font-display text-xl text-white">Sorteos de Participación</h3>
         </div>
         <p className="text-xs text-white/60 leading-relaxed">
-          Todos los participantes que registren al menos una predicción desbloquean el logro **"Primer Gol"** y entran a sorteos periódicos de artículos oficiales del mundial.
+          Todos los participantes que registren al menos una predicción desbloquean el logro
+          **"Primer Gol"** y entran a sorteos periódicos de artículos oficiales del mundial.
         </p>
 
         {/* Ganador del primer gol */}
@@ -1242,7 +1430,9 @@ function OtherPrizesContent({
               </span>
               <div className="flex items-center gap-1.5 mt-1">
                 <Flag code={firstGoalWinner.country} size={18} />
-                <span className="text-xs font-bold text-white truncate">{firstGoalWinner.name}</span>
+                <span className="text-xs font-bold text-white truncate">
+                  {firstGoalWinner.name}
+                </span>
               </div>
             </div>
           </div>
@@ -1261,29 +1451,43 @@ function OtherPrizesContent({
             <div className="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/5">
               <span className="text-2xl shrink-0">⚽</span>
               <div className="min-w-0">
-                <span className="text-xs font-bold text-white block">Balón Oficial del Mundial 2026</span>
-                <span className="text-[10px] text-primary font-semibold">Sorteo: Fin de Fase de Grupos</span>
+                <span className="text-xs font-bold text-white block">
+                  Balón Oficial del Mundial 2026
+                </span>
+                <span className="text-[10px] text-primary font-semibold">
+                  Sorteo: Fin de Fase de Grupos
+                </span>
               </div>
             </div>
             <div className="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/5">
               <span className="text-2xl shrink-0">👕</span>
               <div className="min-w-0">
-                <span className="text-xs font-bold text-white block">Camiseta Oficial de tu Selección Favorita</span>
-                <span className="text-[10px] text-primary font-semibold">Sorteo: Fin de Octavos de Final</span>
+                <span className="text-xs font-bold text-white block">
+                  Camiseta Oficial de tu Selección Favorita
+                </span>
+                <span className="text-[10px] text-primary font-semibold">
+                  Sorteo: Fin de Octavos de Final
+                </span>
               </div>
             </div>
             <div className="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/5">
               <span className="text-2xl shrink-0">🎟️</span>
               <div className="min-w-0">
-                <span className="text-xs font-bold text-white block">Kit Oficial de Fanático (Gorra + Mochila + Taza)</span>
-                <span className="text-[10px] text-primary font-semibold">Sorteo: Fin de Cuartos de Final</span>
+                <span className="text-xs font-bold text-white block">
+                  Kit Oficial de Fanático (Gorra + Mochila + Taza)
+                </span>
+                <span className="text-[10px] text-primary font-semibold">
+                  Sorteo: Fin de Cuartos de Final
+                </span>
               </div>
             </div>
           </div>
         </div>
 
         <div className="p-4 rounded-2xl bg-white/5 border border-white/10 text-center">
-          <span className="text-[10px] font-bold uppercase tracking-widest text-white/40 block">Estado del Sorteo</span>
+          <span className="text-[10px] font-bold uppercase tracking-widest text-white/40 block">
+            Estado del Sorteo
+          </span>
           <span className="font-display text-2xl text-white mt-1 block">
             {leaderboardData.length} Calificados
           </span>

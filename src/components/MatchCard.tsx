@@ -3,11 +3,24 @@ import { Minus, Plus, Lock, MapPin, Clock } from "lucide-react";
 import type { Match } from "@/data";
 import { Flag } from "./Flag";
 import { useTimeFormat, formatTime, formatDay } from "@/contexts/TimeFormat";
-import { predictionsStore, calculateMatchPoints, isPredictionExact, isPredictionCorrect } from "@/lib/predictionsStore";
+import {
+  predictionsStore,
+  calculateMatchPoints,
+  isPredictionExact,
+  isPredictionCorrect,
+} from "@/lib/predictionsStore";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 
-export function MatchCard({ match, compact = false, dimmed = false }: { match: Match; compact?: boolean; dimmed?: boolean }) {
+export function MatchCard({
+  match,
+  compact = false,
+  dimmed = false,
+}: {
+  match: Match;
+  compact?: boolean;
+  dimmed?: boolean;
+}) {
   const { format } = useTimeFormat();
   const existing = predictionsStore.get(match.id);
   const [home, setHome] = useState<number>(existing?.home ?? 0);
@@ -18,7 +31,10 @@ export function MatchCard({ match, compact = false, dimmed = false }: { match: M
   useEffect(() => {
     return predictionsStore.subscribe(() => {
       const p = predictionsStore.get(match.id);
-      if (p) { setHome(p.home); setAway(p.away); }
+      if (p) {
+        setHome(p.home);
+        setAway(p.away);
+      }
     });
   }, [match.id]);
 
@@ -33,7 +49,9 @@ export function MatchCard({ match, compact = false, dimmed = false }: { match: M
     setSaved(true);
 
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
       if (session?.user) {
         const { error } = await supabase.from("predictions").upsert(
           {
@@ -43,13 +61,13 @@ export function MatchCard({ match, compact = false, dimmed = false }: { match: M
             away_score: away,
             updated_at: new Date().toISOString(),
           },
-          { onConflict: "user_id,match_id" }
+          { onConflict: "user_id,match_id" },
         );
         if (error) throw error;
         toast.success("¡Pronóstico guardado en la base de datos!");
       } else {
         toast.info(
-          "Guardado en tu navegador. ¡Inicia sesión en tu Perfil para entrar al ranking global!"
+          "Guardado en tu navegador. ¡Inicia sesión en tu Perfil para entrar al ranking global!",
         );
       }
     } catch (err: any) {
@@ -64,13 +82,18 @@ export function MatchCard({ match, compact = false, dimmed = false }: { match: M
   const hasRealScore = match.status === "finished" || match.status === "live";
 
   return (
-    <div className={`glass animate-float-up relative overflow-hidden rounded-3xl ${compact ? "p-4" : "p-5"} ${dimmed ? "opacity-50 grayscale-[40%]" : ""}`}>
+    <div
+      className={`glass animate-float-up relative overflow-hidden rounded-3xl ${compact ? "p-4" : "p-5"} ${dimmed ? "opacity-50 grayscale-[40%]" : ""}`}
+    >
       <div className="mb-4 flex items-center justify-between text-[11px] font-semibold uppercase tracking-[0.18em] text-white/60">
-        <span className={`rounded-full px-2.5 py-1 ${isKnockout ? "bg-primary/15 text-primary ring-1 ring-primary/30" : "bg-white/8"}`}>
+        <span
+          className={`rounded-full px-2.5 py-1 ${isKnockout ? "bg-primary/15 text-primary ring-1 ring-primary/30" : "bg-white/8"}`}
+        >
           {stageLabel}
         </span>
         <span className="flex items-center gap-1.5">
-          <Clock className="h-3 w-3" /> {formatDay(match.kickoff)} · {formatTime(match.kickoff, format)}
+          <Clock className="h-3 w-3" /> {formatDay(match.kickoff)} ·{" "}
+          {formatTime(match.kickoff, format)}
         </span>
       </div>
 
@@ -132,11 +155,13 @@ export function MatchCard({ match, compact = false, dimmed = false }: { match: M
                   const pts = calculateMatchPoints(match, existing);
                   const exact = isPredictionExact(match, existing);
                   return (
-                    <span className={`rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider ${
-                      pts > 0
-                        ? "bg-green-500/15 text-green-400 ring-1 ring-green-500/30 neon-glow"
-                        : "bg-white/5 text-white/35"
-                    }`}>
+                    <span
+                      className={`rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider ${
+                        pts > 0
+                          ? "bg-green-500/15 text-green-400 ring-1 ring-green-500/30 neon-glow"
+                          : "bg-white/5 text-white/35"
+                      }`}
+                    >
                       {pts > 0 ? `+${pts} PTS (${exact ? "Exacto" : "Acierto"})` : "0 PTS (Fallo)"}
                     </span>
                   );
@@ -165,7 +190,9 @@ export function MatchCard({ match, compact = false, dimmed = false }: { match: M
         <div className="flex min-w-0 flex-col gap-0.5 text-xs text-white/55">
           <div className="flex items-center gap-1.5">
             <MapPin className="h-3.5 w-3.5 shrink-0" />
-            <span className="truncate">{match.stadium}, {match.city}</span>
+            <span className="truncate">
+              {match.stadium}, {match.city}
+            </span>
           </div>
           <span className="text-[10px] uppercase tracking-widest text-white/35">{points}</span>
         </div>
@@ -173,13 +200,23 @@ export function MatchCard({ match, compact = false, dimmed = false }: { match: M
           onClick={save}
           disabled={locked}
           className={`group relative flex shrink-0 items-center gap-1.5 rounded-full px-4 py-2 text-xs font-bold uppercase tracking-wider transition active:scale-95
-            ${locked
-              ? "bg-white/5 text-white/40"
-              : saved
-                ? "bg-primary text-primary-foreground neon-glow"
-                : "bg-white text-black hover:bg-primary"}`}
+            ${
+              locked
+                ? "bg-white/5 text-white/40"
+                : saved
+                  ? "bg-primary text-primary-foreground neon-glow"
+                  : "bg-white text-black hover:bg-primary"
+            }`}
         >
-          {locked ? <><Lock className="h-3.5 w-3.5" /> Cerrado</> : saved ? "Guardado ✓" : "Predecir"}
+          {locked ? (
+            <>
+              <Lock className="h-3.5 w-3.5" /> Cerrado
+            </>
+          ) : saved ? (
+            "Guardado ✓"
+          ) : (
+            "Predecir"
+          )}
         </button>
       </div>
     </div>
@@ -189,10 +226,14 @@ export function MatchCard({ match, compact = false, dimmed = false }: { match: M
 function TeamSide({ team, align }: { team: Match["home"]; align: "left" | "right" }) {
   const isTbd = team.code === "tbd";
   return (
-    <div className={`flex items-center gap-3 ${align === "right" ? "flex-row-reverse text-right" : ""}`}>
+    <div
+      className={`flex items-center gap-3 ${align === "right" ? "flex-row-reverse text-right" : ""}`}
+    >
       <Flag code={team.code} size={56} />
       <div className="min-w-0">
-        <div className={`font-display text-2xl leading-none ${isTbd ? "text-white/40" : "text-white"}`}>
+        <div
+          className={`font-display text-2xl leading-none ${isTbd ? "text-white/40" : "text-white"}`}
+        >
           {isTbd ? "TBD" : team.short}
         </div>
         <div className="mt-1 truncate text-[11px] text-white/50">{team.name}</div>
@@ -201,9 +242,19 @@ function TeamSide({ team, align }: { team: Match["home"]; align: "left" | "right
   );
 }
 
-function ScoreSelector({ value, onChange, disabled }: { value: number; onChange: (delta: number) => void; disabled?: boolean }) {
+function ScoreSelector({
+  value,
+  onChange,
+  disabled,
+}: {
+  value: number;
+  onChange: (delta: number) => void;
+  disabled?: boolean;
+}) {
   return (
-    <div className={`glass flex items-center justify-between rounded-2xl p-2 ${disabled ? "opacity-50" : ""}`}>
+    <div
+      className={`glass flex items-center justify-between rounded-2xl p-2 ${disabled ? "opacity-50" : ""}`}
+    >
       <button
         onClick={() => onChange(-1)}
         disabled={disabled}

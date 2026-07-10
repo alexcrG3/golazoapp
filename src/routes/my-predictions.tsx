@@ -1,16 +1,25 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
-import { ArrowLeft, Trophy, CheckCircle, XCircle, Clock, Calendar, ChevronRight, Flame } from "lucide-react";
+import {
+  ArrowLeft,
+  Trophy,
+  CheckCircle,
+  XCircle,
+  Clock,
+  Calendar,
+  ChevronRight,
+  Flame,
+} from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { AppShell } from "@/components/AppShell";
 import { Flag } from "@/components/Flag";
 import { fetchRealGroupsAndMatches } from "@/lib/api-football";
 import { matches as staticMatches } from "@/data/matches";
-import { 
-  predictionsStore, 
-  calculateMatchPoints, 
-  isPredictionExact, 
-  isPredictionCorrect 
+import {
+  predictionsStore,
+  calculateMatchPoints,
+  isPredictionExact,
+  isPredictionCorrect,
 } from "@/lib/predictionsStore";
 import { useTimeFormat, formatTime, formatDay } from "@/contexts/TimeFormat";
 
@@ -18,7 +27,10 @@ export const Route = createFileRoute("/my-predictions")({
   head: () => ({
     meta: [
       { title: "Mis Pronósticos · Golazo" },
-      { name: "description", content: "Historial completo de tus predicciones y comparación con los resultados reales." },
+      {
+        name: "description",
+        content: "Historial completo de tus predicciones y comparación con los resultados reales.",
+      },
     ],
   }),
   component: MyPredictionsPage,
@@ -100,8 +112,12 @@ function MyPredictionsPage() {
             <ArrowLeft className="h-4 w-4 text-white" />
           </Link>
           <div>
-            <span className="text-[11px] font-bold uppercase tracking-[0.25em] text-primary">Historial</span>
-            <h1 className="font-display mt-0.5 text-4xl leading-none text-white">Mis Pronósticos</h1>
+            <span className="text-[11px] font-bold uppercase tracking-[0.25em] text-primary">
+              Historial
+            </span>
+            <h1 className="font-display mt-0.5 text-4xl leading-none text-white">
+              Mis Pronósticos
+            </h1>
           </div>
         </div>
         <p className="mt-2 text-xs text-white/55">
@@ -113,17 +129,25 @@ function MyPredictionsPage() {
       {finishedCount > 0 && (
         <div className="mt-5 mx-5 glass rounded-3xl p-4 border border-white/10 flex items-center justify-around text-center">
           <div>
-            <span className="text-[9px] font-bold uppercase tracking-wider text-white/40 block">Puntos Acumulados</span>
-            <span className="font-display text-2xl text-primary mt-1 block">+{totalPointsEarned} PTS</span>
+            <span className="text-[9px] font-bold uppercase tracking-wider text-white/40 block">
+              Puntos Acumulados
+            </span>
+            <span className="font-display text-2xl text-primary mt-1 block">
+              +{totalPointsEarned} PTS
+            </span>
           </div>
           <div className="h-8 w-[1px] bg-white/10" />
           <div>
-            <span className="text-[9px] font-bold uppercase tracking-wider text-white/40 block">Marcadores Exactos</span>
+            <span className="text-[9px] font-bold uppercase tracking-wider text-white/40 block">
+              Marcadores Exactos
+            </span>
             <span className="font-display text-2xl text-white mt-1 block">{exactHits}</span>
           </div>
           <div className="h-8 w-[1px] bg-white/10" />
           <div>
-            <span className="text-[9px] font-bold uppercase tracking-wider text-white/40 block">Ganadores/Empates</span>
+            <span className="text-[9px] font-bold uppercase tracking-wider text-white/40 block">
+              Ganadores/Empates
+            </span>
             <span className="font-display text-2xl text-white mt-1 block">{winnerHits}</span>
           </div>
         </div>
@@ -139,7 +163,13 @@ function MyPredictionsPage() {
               filter === f ? "bg-primary text-primary-foreground neon-glow" : "glass text-white/70"
             }`}
           >
-            {f === "all" ? "Todos" : f === "finished" ? "Finalizados" : f === "pending" ? "Pendientes" : "Con Puntos"}
+            {f === "all"
+              ? "Todos"
+              : f === "finished"
+                ? "Finalizados"
+                : f === "pending"
+                  ? "Pendientes"
+                  : "Con Puntos"}
           </button>
         ))}
       </div>
@@ -173,7 +203,9 @@ function MyPredictionsPage() {
                   {/* Local */}
                   <div className="flex items-center gap-2">
                     <Flag code={match.home.code} size={32} />
-                    <span className="font-display text-sm text-white truncate">{match.home.short}</span>
+                    <span className="font-display text-sm text-white truncate">
+                      {match.home.short}
+                    </span>
                   </div>
 
                   {/* Resultados y Comparador */}
@@ -181,7 +213,9 @@ function MyPredictionsPage() {
                     <div className="flex items-center gap-3">
                       {/* Tu Pronóstico */}
                       <div className="flex flex-col items-center">
-                        <span className="text-[9px] uppercase tracking-widest text-primary font-bold">Tu Pred</span>
+                        <span className="text-[9px] uppercase tracking-widest text-primary font-bold">
+                          Tu Pred
+                        </span>
                         <span className="font-display text-xl font-extrabold text-white mt-0.5">
                           {pred.home} - {pred.away}
                         </span>
@@ -191,8 +225,12 @@ function MyPredictionsPage() {
 
                       {/* Resultado Real */}
                       <div className="flex flex-col items-center">
-                        <span className="text-[9px] uppercase tracking-widest text-white/40">Real</span>
-                        <span className={`font-display text-xl font-extrabold mt-0.5 ${hasScore ? "text-gradient-neon" : "text-white/20"}`}>
+                        <span className="text-[9px] uppercase tracking-widest text-white/40">
+                          Real
+                        </span>
+                        <span
+                          className={`font-display text-xl font-extrabold mt-0.5 ${hasScore ? "text-gradient-neon" : "text-white/20"}`}
+                        >
                           {hasScore ? `${match.scoreHome} - ${match.scoreAway}` : "- - -"}
                         </span>
                       </div>
@@ -202,7 +240,9 @@ function MyPredictionsPage() {
                   {/* Visitante */}
                   <div className="flex items-center gap-2 flex-row-reverse text-right">
                     <Flag code={match.away.code} size={32} />
-                    <span className="font-display text-sm text-white truncate">{match.away.short}</span>
+                    <span className="font-display text-sm text-white truncate">
+                      {match.away.short}
+                    </span>
                   </div>
                 </div>
 
@@ -233,11 +273,13 @@ function MyPredictionsPage() {
                   <div>
                     {match.status === "finished" ? (
                       pts > 0 ? (
-                        <span className={`rounded-full px-2.5 py-1 text-[9px] font-bold uppercase tracking-wider ${
-                          exact
-                            ? "bg-green-500/15 text-green-400 ring-1 ring-green-500/30 neon-glow"
-                            : "bg-primary/15 text-primary ring-1 ring-primary/30"
-                        }`}>
+                        <span
+                          className={`rounded-full px-2.5 py-1 text-[9px] font-bold uppercase tracking-wider ${
+                            exact
+                              ? "bg-green-500/15 text-green-400 ring-1 ring-green-500/30 neon-glow"
+                              : "bg-primary/15 text-primary ring-1 ring-primary/30"
+                          }`}
+                        >
                           +{pts} PTS ({exact ? "Exacto" : "Acierto"})
                         </span>
                       ) : (
@@ -263,8 +305,8 @@ function MyPredictionsPage() {
               {filter === "all"
                 ? "No has guardado ninguna predicción para los partidos todavía."
                 : filter === "finished"
-                ? "No tienes predicciones en partidos que hayan finalizado."
-                : "No tienes predicciones pendientes por jugar."}
+                  ? "No tienes predicciones en partidos que hayan finalizado."
+                  : "No tienes predicciones pendientes por jugar."}
             </p>
             {filter === "all" && (
               <Link

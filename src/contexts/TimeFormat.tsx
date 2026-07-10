@@ -24,7 +24,9 @@ export function TimeFormatProvider({ children }: { children: ReactNode }) {
 
   const setFormat = (f: TimeFormat) => {
     setFormatState(f);
-    try { sessionStorage.setItem(STORAGE_KEY, f); } catch {}
+    try {
+      sessionStorage.setItem(STORAGE_KEY, f);
+    } catch {}
   };
   const toggle = () => setFormat(format === "12h" ? "24h" : "12h");
 
@@ -77,10 +79,14 @@ export function TimeFormatToggle({ className = "" }: { className?: string }) {
           format === "24h" ? "translate-x-[40px]" : "translate-x-0"
         }`}
       />
-      <span className={`relative z-10 flex-1 text-center ${format === "12h" ? "text-primary-foreground" : "text-white/60"}`}>
+      <span
+        className={`relative z-10 flex-1 text-center ${format === "12h" ? "text-primary-foreground" : "text-white/60"}`}
+      >
         AM/PM
       </span>
-      <span className={`relative z-10 flex-1 text-center ${format === "24h" ? "text-primary-foreground" : "text-white/60"}`}>
+      <span
+        className={`relative z-10 flex-1 text-center ${format === "24h" ? "text-primary-foreground" : "text-white/60"}`}
+      >
         24h
       </span>
     </button>

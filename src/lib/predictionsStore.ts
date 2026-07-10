@@ -9,7 +9,7 @@ type Listener = () => void;
 const listeners = new Set<Listener>();
 const notify = () => listeners.forEach((l) => l());
 
-const read = <T,>(key: string, fallback: T): T => {
+const read = <T>(key: string, fallback: T): T => {
   if (typeof window === "undefined") return fallback;
   try {
     const v = localStorage.getItem(key);
@@ -21,7 +21,9 @@ const read = <T,>(key: string, fallback: T): T => {
 
 const write = (key: string, val: unknown) => {
   if (typeof window === "undefined") return;
-  try { localStorage.setItem(key, JSON.stringify(val)); } catch {}
+  try {
+    localStorage.setItem(key, JSON.stringify(val));
+  } catch {}
 };
 
 export const predictionsStore = {
@@ -55,7 +57,9 @@ export const predictionsStore = {
   },
   subscribe(l: Listener) {
     listeners.add(l);
-    return () => { listeners.delete(l); };
+    return () => {
+      listeners.delete(l);
+    };
   },
 };
 
@@ -76,7 +80,7 @@ export function useChampion() {
 
 export function calculateMatchPoints(
   match: { stage: string; status: string; scoreHome?: number; scoreAway?: number },
-  pred: { home: number; away: number } | undefined
+  pred: { home: number; away: number } | undefined,
 ): number {
   if (!pred || match.status !== "finished" || match.scoreHome == null || match.scoreAway == null) {
     return 0;
@@ -96,7 +100,7 @@ export function calculateMatchPoints(
 
 export function isPredictionCorrect(
   match: { status: string; scoreHome?: number; scoreAway?: number },
-  pred: { home: number; away: number } | undefined
+  pred: { home: number; away: number } | undefined,
 ): boolean {
   if (!pred || match.status !== "finished" || match.scoreHome == null || match.scoreAway == null) {
     return false;
@@ -108,7 +112,7 @@ export function isPredictionCorrect(
 
 export function isPredictionExact(
   match: { status: string; scoreHome?: number; scoreAway?: number },
-  pred: { home: number; away: number } | undefined
+  pred: { home: number; away: number } | undefined,
 ): boolean {
   if (!pred || match.status !== "finished" || match.scoreHome == null || match.scoreAway == null) {
     return false;
@@ -144,7 +148,12 @@ export function calculateUserStats(matches: any[], fallbackChampionCode?: string
   const championCode = predictionsStore.getChampion() || fallbackChampionCode;
   if (championCode) {
     const finalMatch = matches.find((m: any) => m.stage === "final");
-    if (finalMatch && finalMatch.status === "finished" && finalMatch.scoreHome != null && finalMatch.scoreAway != null) {
+    if (
+      finalMatch &&
+      finalMatch.status === "finished" &&
+      finalMatch.scoreHome != null &&
+      finalMatch.scoreAway != null
+    ) {
       let winnerCode = "";
       if (finalMatch.scoreHome > finalMatch.scoreAway) {
         winnerCode = finalMatch.home.code;
@@ -157,8 +166,11 @@ export function calculateUserStats(matches: any[], fallbackChampionCode?: string
     }
   }
 
-  const finishedPredictionsCount = matches.filter(m => m.status === "finished" && predictions[m.id]).length;
-  const accuracy = finishedPredictionsCount > 0 ? Math.round((correct / finishedPredictionsCount) * 100) : 0;
+  const finishedPredictionsCount = matches.filter(
+    (m) => m.status === "finished" && predictions[m.id],
+  ).length;
+  const accuracy =
+    finishedPredictionsCount > 0 ? Math.round((correct / finishedPredictionsCount) * 100) : 0;
 
   return {
     predictions: totalPredictions,
@@ -168,4 +180,3 @@ export function calculateUserStats(matches: any[], fallbackChampionCode?: string
     points,
   };
 }
-

@@ -1,4 +1,9 @@
-import { predictionsStore, calculateMatchPoints, isPredictionExact, isPredictionCorrect } from "@/lib/predictionsStore";
+import {
+  predictionsStore,
+  calculateMatchPoints,
+  isPredictionExact,
+  isPredictionCorrect,
+} from "@/lib/predictionsStore";
 import { supabase } from "@/lib/supabase";
 import { teams } from "@/data/teams";
 
@@ -62,14 +67,14 @@ function getMockPrediction(playerName: string, matchId: string) {
 }
 
 export function getDynamicLeaderboard(matchesList: any[]): LeaderboardEntry[] {
-  const finished = matchesList.filter(m => m.status === "finished");
+  const finished = matchesList.filter((m) => m.status === "finished");
   if (finished.length === 0) {
     return leaderboard;
   }
 
   const userPredictions = predictionsStore.getAll();
 
-  const entries = seed.map(player => {
+  const entries = seed.map((player) => {
     if (player.isYou) {
       let pts = 0;
       let correct = 0;
@@ -97,7 +102,12 @@ export function getDynamicLeaderboard(matchesList: any[]): LeaderboardEntry[] {
       const championCode = predictionsStore.getChampion();
       if (championCode) {
         const finalMatch = matchesList.find((m: any) => m.stage === "final");
-        if (finalMatch && finalMatch.status === "finished" && finalMatch.scoreHome != null && finalMatch.scoreAway != null) {
+        if (
+          finalMatch &&
+          finalMatch.status === "finished" &&
+          finalMatch.scoreHome != null &&
+          finalMatch.scoreAway != null
+        ) {
           let winnerCode = "";
           if (finalMatch.scoreHome > finalMatch.scoreAway) {
             winnerCode = finalMatch.home.code;
@@ -171,12 +181,10 @@ export function getDynamicLeaderboard(matchesList: any[]): LeaderboardEntry[] {
 
 export async function getSupabaseLeaderboard(
   matchesList: any[],
-  currentUserId?: string
+  currentUserId?: string,
 ): Promise<LeaderboardEntry[]> {
   try {
-    const { data: dbProfiles, error: pError } = await supabase
-      .from("profiles")
-      .select("*");
+    const { data: dbProfiles, error: pError } = await supabase.from("profiles").select("*");
     if (pError) throw pError;
 
     const { data: dbPredictions, error: predError } = await supabase
@@ -186,8 +194,8 @@ export async function getSupabaseLeaderboard(
 
     // Filtrar para incluir únicamente al grupo original en el ranking global
     const ORIGINAL_USERNAMES = ["alexg3", "ghiuly", "eilyn", "gianna", "javiertroz"];
-    const filteredProfiles = (dbProfiles || []).filter((p) => 
-      ORIGINAL_USERNAMES.includes(p.username || "")
+    const filteredProfiles = (dbProfiles || []).filter((p) =>
+      ORIGINAL_USERNAMES.includes(p.username || ""),
     );
 
     const realEntries: LeaderboardEntry[] = filteredProfiles.map((profile) => {
@@ -209,7 +217,10 @@ export async function getSupabaseLeaderboard(
         if (pred) {
           if (m.status === "finished") {
             finishedPreds++;
-            const matchPts = calculateMatchPoints(m, { home: pred.home_score, away: pred.away_score });
+            const matchPts = calculateMatchPoints(m, {
+              home: pred.home_score,
+              away: pred.away_score,
+            });
             pts += matchPts;
             if (pred.home_score === m.scoreHome && pred.away_score === m.scoreAway) {
               exact++;
@@ -239,7 +250,12 @@ export async function getSupabaseLeaderboard(
       }
 
       const finalMatch = matchesList.find((m: any) => m.stage === "final");
-      if (finalMatch && finalMatch.status === "finished" && finalMatch.scoreHome != null && finalMatch.scoreAway != null) {
+      if (
+        finalMatch &&
+        finalMatch.status === "finished" &&
+        finalMatch.scoreHome != null &&
+        finalMatch.scoreAway != null
+      ) {
         let winnerCode = "";
         if (finalMatch.scoreHome > finalMatch.scoreAway) {
           winnerCode = finalMatch.home.code;
@@ -273,9 +289,10 @@ export async function getSupabaseLeaderboard(
 
       let maxStreak = 0;
       let tempStreak = 0;
-      const chronoMatches = [...finishedMatches]
-        .sort((a, b) => new Date(a.date || "").getTime() - new Date(b.date || "").getTime());
-        
+      const chronoMatches = [...finishedMatches].sort(
+        (a, b) => new Date(a.date || "").getTime() - new Date(b.date || "").getTime(),
+      );
+
       for (const m of chronoMatches) {
         const pred = userPreds.find((p) => p.match_id === m.id);
         if (pred) {
@@ -308,9 +325,10 @@ export async function getSupabaseLeaderboard(
     });
 
     return realEntries
-      .sort((a, b) => b.points - a.points || b.accuracy - a.accuracy || a.name.localeCompare(b.name))
+      .sort(
+        (a, b) => b.points - a.points || b.accuracy - a.accuracy || a.name.localeCompare(b.name),
+      )
       .map((entry, i) => ({ ...entry, rank: i + 1 }));
-
   } catch (err) {
     console.error("Error al calcular ranking de Supabase:", err);
     return getDynamicLeaderboard(matchesList);
@@ -346,22 +364,25 @@ export async function getOtherPrizesStatus(matchesList: any[]): Promise<{
 
     // 2. Obtener ganadores del logro Hat-Trick (maxStreak >= 3)
     const { data: dbProfiles, error: pError } = await supabase.from("profiles").select("*");
-    const { data: dbPredictions, error: predError } = await supabase.from("predictions").select("*");
+    const { data: dbPredictions, error: predError } = await supabase
+      .from("predictions")
+      .select("*");
 
     const hatTrickWinners: { name: string; country: string; maxStreak: number }[] = [];
 
     if (!pError && !predError && dbProfiles && dbPredictions) {
       const finishedMatches = matchesList.filter((m) => m.status === "finished");
-      
+
       dbProfiles.forEach((profile) => {
         const userPreds = dbPredictions.filter((p) => p.user_id === profile.id);
-        
+
         // Calcular racha máxima
         let maxStreak = 0;
         let currentStreak = 0;
-        const chronoMatches = [...finishedMatches]
-          .sort((a, b) => new Date(a.date || "").getTime() - new Date(b.date || "").getTime());
-          
+        const chronoMatches = [...finishedMatches].sort(
+          (a, b) => new Date(a.date || "").getTime() - new Date(b.date || "").getTime(),
+        );
+
         for (const m of chronoMatches) {
           const pred = userPreds.find((p) => p.match_id === m.id);
           if (pred) {
@@ -395,4 +416,3 @@ export async function getOtherPrizesStatus(matchesList: any[]): Promise<{
     return { firstGoalWinner: null, hatTrickWinners: [] };
   }
 }
-

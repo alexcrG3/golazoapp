@@ -1,10 +1,10 @@
 // api/ssr.js - Vercel Serverless Function que envuelve el servidor SSR de TanStack Start
-import server from '../dist/server/server.js';
+import server from "../dist/server/server.js";
 
 export default async function handler(req, res) {
   try {
-    const protocol = req.headers['x-forwarded-proto'] || 'https';
-    const host = req.headers.host || 'localhost';
+    const protocol = req.headers["x-forwarded-proto"] || "https";
+    const host = req.headers.host || "localhost";
     const url = `${protocol}://${host}${req.url}`;
 
     // Convertir headers de Node.js a Web API Headers
@@ -21,7 +21,7 @@ export default async function handler(req, res) {
 
     // Leer body del request (para POST, PUT, etc.)
     let body = undefined;
-    if (req.method !== 'GET' && req.method !== 'HEAD') {
+    if (req.method !== "GET" && req.method !== "HEAD") {
       const chunks = [];
       for await (const chunk of req) {
         chunks.push(chunk);
@@ -50,8 +50,8 @@ export default async function handler(req, res) {
     const buffer = Buffer.from(await response.arrayBuffer());
     res.end(buffer);
   } catch (error) {
-    console.error('SSR Error:', error);
+    console.error("SSR Error:", error);
     res.statusCode = 500;
-    res.end('Internal Server Error: ' + error.message);
+    res.end("Internal Server Error: " + error.message);
   }
 }

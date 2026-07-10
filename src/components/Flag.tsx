@@ -1,6 +1,14 @@
 import { flagUrl } from "@/data";
 
-export function Flag({ code, size = 48, className = "" }: { code: string; size?: number; className?: string }) {
+export function Flag({
+  code,
+  size = 48,
+  className = "",
+}: {
+  code: string;
+  size?: number;
+  className?: string;
+}) {
   return (
     <div
       className={`relative shrink-0 overflow-hidden rounded-full ring-2 ring-white/15 shadow-lg ${className}`}

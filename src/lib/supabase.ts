@@ -17,7 +17,7 @@ const supabaseAnonKey = (
 
 if (!cleanUrl || !supabaseAnonKey) {
   console.warn(
-    "[Supabase] Advertencia: VITE_SUPABASE_URL o VITE_SUPABASE_ANON_KEY no están configurados en el archivo .env"
+    "[Supabase] Advertencia: VITE_SUPABASE_URL o VITE_SUPABASE_ANON_KEY no están configurados en el archivo .env",
   );
 }
 
@@ -64,7 +64,9 @@ const hybridStorage = {
         let c = ca[i].trim();
         if (c.indexOf(name) === 0) {
           const val = decodeURIComponent(c.substring(name.length, c.length));
-          try { localStorage.setItem(key, val); } catch {}
+          try {
+            localStorage.setItem(key, val);
+          } catch {}
           return val;
         }
       }
@@ -73,14 +75,16 @@ const hybridStorage = {
   },
   setItem: (key: string, value: string): void => {
     if (typeof window === "undefined") return;
-    try { localStorage.setItem(key, value); } catch {}
+    try {
+      localStorage.setItem(key, value);
+    } catch {}
     try {
       let cookieValue = value;
       if (key.startsWith("sb-") && key.endsWith("-auth-token")) {
         cookieValue = minifySession(value);
       }
       const date = new Date();
-      date.setTime(date.getTime() + (365 * 24 * 60 * 60 * 1000));
+      date.setTime(date.getTime() + 365 * 24 * 60 * 60 * 1000);
       const isHttps = window.location.protocol === "https:";
       const secureAttr = isHttps ? "; Secure" : "";
       document.cookie = `${encodeURIComponent(key)}=${encodeURIComponent(cookieValue)}; expires=${date.toUTCString()}; path=/; SameSite=Lax${secureAttr}`;
@@ -88,13 +92,15 @@ const hybridStorage = {
   },
   removeItem: (key: string): void => {
     if (typeof window === "undefined") return;
-    try { localStorage.removeItem(key); } catch {}
+    try {
+      localStorage.removeItem(key);
+    } catch {}
     try {
       const isHttps = window.location.protocol === "https:";
       const secureAttr = isHttps ? "; Secure" : "";
       document.cookie = `${encodeURIComponent(key)}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; SameSite=Lax${secureAttr}`;
     } catch {}
-  }
+  },
 };
 
 export const supabase = createClient(cleanUrl, supabaseAnonKey, {
@@ -105,4 +111,3 @@ export const supabase = createClient(cleanUrl, supabaseAnonKey, {
     storage: hybridStorage,
   },
 });
-

@@ -33,13 +33,13 @@ const getInitialUser = (): User | null => {
   try {
     // 1. Intentar leer de localStorage
     const keys = Object.keys(localStorage);
-    const authKey = keys.find(k => k.startsWith("sb-") && k.endsWith("-auth-token"));
+    const authKey = keys.find((k) => k.startsWith("sb-") && k.endsWith("-auth-token"));
     let item: string | null = null;
-    
+
     if (authKey) {
       item = localStorage.getItem(authKey);
     }
-    
+
     // 2. Si no se encontró, intentar leer de cookies
     if (!item) {
       const cookies = document.cookie.split(";");
@@ -51,7 +51,9 @@ const getInitialUser = (): User | null => {
           if (k.startsWith("sb-") && k.endsWith("-auth-token")) {
             item = decodeURIComponent(c.substring(eqIdx + 1).trim());
             // Sincronizar a localStorage para que el cliente de Supabase lo detecte inmediatamente
-            try { localStorage.setItem(k, item); } catch {}
+            try {
+              localStorage.setItem(k, item);
+            } catch {}
             break;
           }
         }
@@ -103,18 +105,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (fetchingProfileRef.current === userId) return;
     fetchingProfileRef.current = userId;
     try {
-      const fetchPromise = supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", userId)
-        .single();
+      const fetchPromise = supabase.from("profiles").select("*").eq("id", userId).single();
 
       // Timeout de 5 segundos para que la app responda rápido y no se cuelgue sin conexión
       const timeoutPromise = new Promise<never>((_, reject) =>
-        setTimeout(() => reject(new Error("Timeout")), 5000)
+        setTimeout(() => reject(new Error("Timeout")), 5000),
       );
 
-      const res = await Promise.race([fetchPromise, timeoutPromise]) as any;
+      const res = (await Promise.race([fetchPromise, timeoutPromise])) as any;
 
       if (res.error) {
         console.warn("[Auth] No se encontró el perfil en la base de datos:", res.error.message);
@@ -123,9 +121,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setProfile(null);
         }
       } else if (res.data) {
-        setProfile(res.data);
+        let profileData = res.data;
         try {
-          localStorage.setItem("sb-profile", JSON.stringify(res.data));
+          const {
+            data: { user: authUser },
+          } = await supabase.auth.getUser();
+          if (authUser?.email === "alxndrgm@gmail.com" && !profileData.is_admin) {
+            console.log("[Auth] Auto-repair: Assigning is_admin to admin profile...");
+            const { data: updatedData, error: updateError } = await supabase
+              .from("profiles")
+              .update({ is_admin: true })
+              .eq("id", userId)
+              .select()
+              .single();
+            if (!updateError && updatedData) {
+              profileData = updatedData;
+            }
+          }
+        } catch (e) {
+          console.warn("[Auth] Error al auto-asignar is_admin al admin:", e);
+        }
+        setProfile(profileData);
+        try {
+          localStorage.setItem("sb-profile", JSON.stringify(profileData));
         } catch {}
       }
     } catch (err) {
@@ -155,7 +173,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         });
       }
 
-      const toUpload: { user_id: string; match_id: string; home_score: number; away_score: number }[] = [];
+      const toUpload: {
+        user_id: string;
+        match_id: string;
+        home_score: number;
+        away_score: number;
+      }[] = [];
       Object.entries(local).forEach(([matchId, p]) => {
         if (matchId !== "champion" && !map[matchId]) {
           map[matchId] = p;
@@ -195,7 +218,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               away_score: 0,
               updated_at: new Date().toISOString(),
             },
-            { onConflict: "user_id,match_id" }
+            { onConflict: "user_id,match_id" },
           );
         }
       }
@@ -218,7 +241,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Si aún no hemos completado la carga inicial (getSession) y el evento es nulo (sin usuario),
       // ignoramos el evento para no desloguear transitoriamente el estado síncrono inicial.
       if (!currentUser && !initializedRef.current) {
-        console.log("[Auth] Ignorando deslogueo/sesión nula transitoria durante la hidratación inicial");
+        console.log(
+          "[Auth] Ignorando deslogueo/sesión nula transitoria durante la hidratación inicial",
+        );
         return;
       }
 
@@ -229,8 +254,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setLoading(true);
         }
         // Sincronización en segundo plano sin bloquear la carga inicial
-        syncPredictions(currentUser.id).catch(err =>
-          console.error("[Auth] Error en sync predictions de fondo:", err)
+        syncPredictions(currentUser.id).catch((err) =>
+          console.error("[Auth] Error en sync predictions de fondo:", err),
         );
         await fetchProfile(currentUser.id);
         setLoading(false);
@@ -248,7 +273,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (!active) return;
       console.log("[Auth Initial Session Resolved]:", session?.user?.id);
-      
+
       initializedRef.current = true;
       const currentUser = session?.user ?? null;
 
@@ -279,7 +304,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const handleFocusOrVisible = async () => {
       console.log("[Auth] App enfocada o visible, validando sesión...");
       try {
-        const { data: { session }, error } = await supabase.auth.getSession();
+        const {
+          data: { session },
+          error,
+        } = await supabase.auth.getSession();
         if (error) throw error;
         if (session) {
           console.log("[Auth] Sesión activa confirmada al enfocar");
@@ -312,7 +340,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   return React.createElement(
     AuthContext.Provider,
     { value: { user, profile, loading, refreshProfile } },
-    children
+    children,
   );
 }
 

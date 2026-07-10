@@ -1,5 +1,16 @@
 import { Link } from "@tanstack/react-router";
-import { X, Home, Trophy, User, BookOpen, FileText, ShieldCheck, LogOut, ChevronRight, Settings } from "lucide-react";
+import {
+  X,
+  Home,
+  Trophy,
+  User,
+  BookOpen,
+  FileText,
+  ShieldCheck,
+  LogOut,
+  ChevronRight,
+  Settings,
+} from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/lib/supabase";
 import { Flag } from "./Flag";
@@ -9,7 +20,15 @@ import { useState, useEffect } from "react";
 // Soccer ball icon
 function Ball({ className = "" }: { className?: string }) {
   return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className={className}>
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+    >
       <circle cx="12" cy="12" r="9" />
       <path d="M12 3l3 4-1.5 5h-3L9 7z" />
       <path d="M3.5 10l3.5 2 2 5-2 2.5" />
@@ -88,14 +107,14 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
         {/* Top Header */}
         <div className="p-5 border-b border-white/10 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <img
-              src="/icons/ball.png"
-              alt="Golazo"
-              className="h-9 w-9 rounded-lg object-cover"
-            />
+            <img src="/icons/ball.png" alt="Golazo" className="h-9 w-9 rounded-lg object-cover" />
             <div>
-              <span className="font-display text-lg tracking-wide text-white block leading-none">GOLAZO</span>
-              <span className="text-[9px] uppercase tracking-widest text-white/40">Mundial 2026</span>
+              <span className="font-display text-lg tracking-wide text-white block leading-none">
+                GOLAZO
+              </span>
+              <span className="text-[9px] uppercase tracking-widest text-white/40">
+                Mundial 2026
+              </span>
             </div>
           </div>
           <button
@@ -112,9 +131,17 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
           {displayUser ? (
             <div className="glass p-4 rounded-2xl flex items-center gap-3">
               {displayProfile?.avatar_url ? (
-                <img src={displayProfile.avatar_url} alt="Avatar" className="h-[42px] w-[42px] rounded-full object-cover ring-2 ring-primary/30" />
+                <img
+                  src={displayProfile.avatar_url}
+                  alt="Avatar"
+                  className="h-[42px] w-[42px] rounded-full object-cover ring-2 ring-primary/30"
+                />
               ) : (
-                <Flag code={displayProfile?.country_code || "cr"} size={42} className="ring-2 ring-primary/30" />
+                <Flag
+                  code={displayProfile?.country_code || "cr"}
+                  size={42}
+                  className="ring-2 ring-primary/30"
+                />
               )}
               <div className="min-w-0 flex-1">
                 <span className="block font-semibold text-white truncate leading-tight">
@@ -124,14 +151,22 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                   @{displayProfile?.username || "usuario"}
                 </span>
               </div>
-              <Link to="/profile" onClick={onClose} className="text-primary hover:text-primary-foreground p-1 transition">
+              <Link
+                to="/profile"
+                onClick={onClose}
+                className="text-primary hover:text-primary-foreground p-1 transition"
+              >
                 <ChevronRight className="h-4 w-4" />
               </Link>
             </div>
           ) : (
             <div className="glass p-4 rounded-2xl text-center">
-              <span className="font-display text-base text-white block">Participa en la Quiniela</span>
-              <p className="text-[11px] text-white/50 mt-1">Guarda tus pronósticos en tiempo real y entra al ranking.</p>
+              <span className="font-display text-base text-white block">
+                Participa en la Quiniela
+              </span>
+              <p className="text-[11px] text-white/50 mt-1">
+                Guarda tus pronósticos en tiempo real y entra al ranking.
+              </p>
               <Link
                 to="/profile"
                 onClick={onClose}
@@ -144,7 +179,9 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
 
           {/* Main Navigation */}
           <div className="space-y-1">
-            <span className="px-2 text-[9px] font-bold uppercase tracking-[0.2em] text-white/30 block mb-2">Navegación</span>
+            <span className="px-2 text-[9px] font-bold uppercase tracking-[0.2em] text-white/30 block mb-2">
+              Navegación
+            </span>
             {navItems.map((item) => (
               <Link
                 key={item.to}
@@ -154,7 +191,9 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                   item.isSpecial ? "text-gradient-gold" : "text-white/80 hover:text-white"
                 }`}
               >
-                <item.Icon className={`h-4.5 w-4.5 ${item.isSpecial ? "text-[oklch(0.85_0.16_85)]" : "text-white/50"}`} />
+                <item.Icon
+                  className={`h-4.5 w-4.5 ${item.isSpecial ? "text-[oklch(0.85_0.16_85)]" : "text-white/50"}`}
+                />
                 {item.label}
               </Link>
             ))}
@@ -162,7 +201,9 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
 
           {/* Campeonato Nacional Block */}
           <div className="space-y-1">
-            <span className="px-2 text-[9px] font-bold uppercase tracking-[0.2em] text-white/30 block mb-2">Campeonato Nacional</span>
+            <span className="px-2 text-[9px] font-bold uppercase tracking-[0.2em] text-white/30 block mb-2">
+              Campeonato Nacional
+            </span>
             <Link
               to="/profile"
               onClick={onClose}
@@ -180,7 +221,9 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
 
           {/* Legal / Rules Section */}
           <div className="space-y-1">
-            <span className="px-2 text-[9px] font-bold uppercase tracking-[0.2em] text-white/30 block mb-2">Reglamento y Ayuda</span>
+            <span className="px-2 text-[9px] font-bold uppercase tracking-[0.2em] text-white/30 block mb-2">
+              Reglamento y Ayuda
+            </span>
             {legalItems.map((item) => (
               <Link
                 key={item.label}
@@ -197,7 +240,9 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
 
           {/* Settings Block */}
           <div className="space-y-1">
-            <span className="px-2 text-[9px] font-bold uppercase tracking-[0.2em] text-white/30 block mb-2">Configuración</span>
+            <span className="px-2 text-[9px] font-bold uppercase tracking-[0.2em] text-white/30 block mb-2">
+              Configuración
+            </span>
             <Link
               to="/profile"
               onClick={onClose}
@@ -219,9 +264,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
               <LogOut className="h-4 w-4" /> Cerrar Sesión
             </button>
           ) : (
-            <div className="text-center text-[10px] text-white/30">
-              Golazo Quiniela © 2026
-            </div>
+            <div className="text-center text-[10px] text-white/30">Golazo Quiniela © 2026</div>
           )}
         </div>
       </aside>

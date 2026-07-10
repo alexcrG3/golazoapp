@@ -1,5 +1,20 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { Share2, LogOut, Lock, Mail, User as UserIcon, Flag as FlagIcon, Eye, EyeOff, ChevronRight, Trophy, Menu, BookOpen, ShieldCheck, Pencil } from "lucide-react";
+import {
+  Share2,
+  LogOut,
+  Lock,
+  Mail,
+  User as UserIcon,
+  Flag as FlagIcon,
+  Eye,
+  EyeOff,
+  ChevronRight,
+  Trophy,
+  Menu,
+  BookOpen,
+  ShieldCheck,
+  Pencil,
+} from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { useState, useRef } from "react";
 import { AppShell } from "@/components/AppShell";
@@ -20,7 +35,10 @@ export const Route = createFileRoute("/profile")({
   head: () => ({
     meta: [
       { title: "Perfil · Golazo" },
-      { name: "description", content: "Tu identidad futbolera, estadísticas y logros de la quiniela." },
+      {
+        name: "description",
+        content: "Tu identidad futbolera, estadísticas y logros de la quiniela.",
+      },
     ],
   }),
   component: ProfilePage,
@@ -28,7 +46,10 @@ export const Route = createFileRoute("/profile")({
 
 const getAuthErrorMessage = (err: any): string => {
   const msg = err?.message || String(err);
-  if (msg.toLowerCase().includes("rate limit exceeded") || msg.toLowerCase().includes("limite de tasa")) {
+  if (
+    msg.toLowerCase().includes("rate limit exceeded") ||
+    msg.toLowerCase().includes("limite de tasa")
+  ) {
     return "Has realizado demasiadas solicitudes seguidas. Por seguridad, por favor espera 1 minuto antes de volver a intentarlo.";
   }
   if (msg.toLowerCase().includes("invalid login credentials")) {
@@ -80,11 +101,9 @@ function ProfilePage() {
   const userPredictions = predictionsStore.getAll();
   const dynamicStats = calculateUserStats(matchesList, profile?.country_code);
   const leaderboardList = getDynamicLeaderboard(matchesList);
-  
+
   // Encontrar la posición del usuario en el leaderboard dinámico
-  const userRank = user 
-    ? leaderboardList.find(p => p.id === user.id)?.rank || 1 
-    : 1;
+  const userRank = user ? leaderboardList.find((p) => p.id === user.id)?.rank || 1 : 1;
 
   // Query para obtener administradores (solo si el usuario actual es admin)
   const { data: adminsList = [], refetch: refetchAdmins } = useQuery({
@@ -152,7 +171,7 @@ function ProfilePage() {
         },
       });
       if (error) throw error;
-      
+
       if (data?.session) {
         toast.success("¡Cuenta creada y sesión iniciada!");
         navigate({ to: "/" });
@@ -260,7 +279,11 @@ function ProfilePage() {
       return;
     }
 
-    if (!confirm(`¿Estás seguro de que quieres quitarle los privilegios de administrador a @${adminUsername}?`)) {
+    if (
+      !confirm(
+        `¿Estás seguro de que quieres quitarle los privilegios de administrador a @${adminUsername}?`,
+      )
+    ) {
       return;
     }
 
@@ -302,9 +325,7 @@ function ProfilePage() {
 
       // 1. Clean up old avatar files in storage for this user to save space
       try {
-        const { data: filesList } = await supabase.storage
-          .from("avatars")
-          .list(user.id);
+        const { data: filesList } = await supabase.storage.from("avatars").list(user.id);
         if (filesList && filesList.length > 0) {
           const filesToDelete = filesList.map((f) => `${user.id}/${f.name}`);
           await supabase.storage.from("avatars").remove(filesToDelete);
@@ -321,9 +342,9 @@ function ProfilePage() {
       if (uploadError) throw uploadError;
 
       // 3. Get public URL
-      const { data: { publicUrl } } = supabase.storage
-        .from("avatars")
-        .getPublicUrl(filePath);
+      const {
+        data: { publicUrl },
+      } = supabase.storage.from("avatars").getPublicUrl(filePath);
 
       // 4. Update profiles table in Supabase
       const { error: updateError } = await supabase
@@ -356,7 +377,10 @@ function ProfilePage() {
     e.preventDefault();
     if (!user) return;
 
-    const cleanUsername = editUsername.toLowerCase().replace(/[^a-z0-9_.]/g, "").trim();
+    const cleanUsername = editUsername
+      .toLowerCase()
+      .replace(/[^a-z0-9_.]/g, "")
+      .trim();
     const cleanFullName = editFullName.trim();
 
     if (!cleanFullName || !cleanUsername) {
@@ -413,9 +437,13 @@ function ProfilePage() {
               <Menu className="h-4 w-4 text-white" />
             </button>
           </div>
-          <span className="text-[11px] font-bold uppercase tracking-[0.25em] text-primary block mt-1">Únete a Golazo</span>
+          <span className="text-[11px] font-bold uppercase tracking-[0.25em] text-primary block mt-1">
+            Únete a Golazo
+          </span>
           <h1 className="font-display mt-1 text-5xl leading-none text-white">Tu Quiniela</h1>
-          <p className="mt-2 text-sm text-white/55">Inicia sesión o crea tu cuenta para guardar predicciones y competir.</p>
+          <p className="mt-2 text-sm text-white/55">
+            Inicia sesión o crea tu cuenta para guardar predicciones y competir.
+          </p>
         </header>
 
         <div className="mt-8 px-4">
@@ -424,7 +452,9 @@ function ProfilePage() {
             <button
               onClick={() => setTab("login")}
               className={`flex-1 rounded-xl py-2.5 text-xs font-bold uppercase tracking-wider transition ${
-                tab === "login" ? "bg-white text-black font-extrabold" : "text-white/60 hover:text-white"
+                tab === "login"
+                  ? "bg-white text-black font-extrabold"
+                  : "text-white/60 hover:text-white"
               }`}
             >
               Iniciar Sesión
@@ -432,7 +462,9 @@ function ProfilePage() {
             <button
               onClick={() => setTab("register")}
               className={`flex-1 rounded-xl py-2.5 text-xs font-bold uppercase tracking-wider transition ${
-                tab === "register" ? "bg-white text-black font-extrabold" : "text-white/60 hover:text-white"
+                tab === "register"
+                  ? "bg-white text-black font-extrabold"
+                  : "text-white/60 hover:text-white"
               }`}
             >
               Registrarse
@@ -442,15 +474,19 @@ function ProfilePage() {
           {/* Formulario */}
           <div className="glass p-6 rounded-3xl relative overflow-hidden">
             <div className="absolute inset-0 -z-10 bg-gradient-to-br from-primary/5 via-transparent to-transparent" />
-            
+
             {tab === "forgot" ? (
               <form onSubmit={handleForgotPassword} className="space-y-4">
                 <div className="text-center mb-2">
                   <h3 className="font-display text-lg text-white">Recuperar Contraseña</h3>
-                  <p className="text-xs text-white/55 mt-1">Te enviaremos un correo para que puedas restablecerla.</p>
+                  <p className="text-xs text-white/55 mt-1">
+                    Te enviaremos un correo para que puedas restablecerla.
+                  </p>
                 </div>
                 <div className="space-y-1.5">
-                  <label className="text-[10px] uppercase tracking-widest text-white/50 block font-semibold">Correo Electrónico</label>
+                  <label className="text-[10px] uppercase tracking-widest text-white/50 block font-semibold">
+                    Correo Electrónico
+                  </label>
                   <div className="relative">
                     <Mail className="absolute left-4 top-3.5 h-4 w-4 text-white/40" />
                     <input
@@ -483,7 +519,9 @@ function ProfilePage() {
             ) : tab === "login" ? (
               <form onSubmit={handleLogin} className="space-y-4">
                 <div className="space-y-1.5">
-                  <label className="text-[10px] uppercase tracking-widest text-white/50 block font-semibold">Correo Electrónico</label>
+                  <label className="text-[10px] uppercase tracking-widest text-white/50 block font-semibold">
+                    Correo Electrónico
+                  </label>
                   <div className="relative">
                     <Mail className="absolute left-4 top-3.5 h-4 w-4 text-white/40" />
                     <input
@@ -499,7 +537,9 @@ function ProfilePage() {
 
                 <div className="space-y-1.5">
                   <div className="flex justify-between items-center">
-                    <label className="text-[10px] uppercase tracking-widest text-white/50 block font-semibold">Contraseña</label>
+                    <label className="text-[10px] uppercase tracking-widest text-white/50 block font-semibold">
+                      Contraseña
+                    </label>
                     <button
                       type="button"
                       onClick={() => setTab("forgot")}
@@ -539,7 +579,9 @@ function ProfilePage() {
             ) : (
               <form onSubmit={handleRegister} className="space-y-4">
                 <div className="space-y-1.5">
-                  <label className="text-[10px] uppercase tracking-widest text-white/50 block font-semibold">Apodo / Nombre de Usuario</label>
+                  <label className="text-[10px] uppercase tracking-widest text-white/50 block font-semibold">
+                    Apodo / Nombre de Usuario
+                  </label>
                   <div className="relative">
                     <UserIcon className="absolute left-4 top-3.5 h-4 w-4 text-white/40" />
                     <input
@@ -554,7 +596,9 @@ function ProfilePage() {
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-[10px] uppercase tracking-widest text-white/50 block font-semibold">Nombre Completo</label>
+                  <label className="text-[10px] uppercase tracking-widest text-white/50 block font-semibold">
+                    Nombre Completo
+                  </label>
                   <div className="relative">
                     <UserIcon className="absolute left-4 top-3.5 h-4 w-4 text-white/40" />
                     <input
@@ -569,7 +613,9 @@ function ProfilePage() {
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-[10px] uppercase tracking-widest text-white/50 block font-semibold">Selección Favorita</label>
+                  <label className="text-[10px] uppercase tracking-widest text-white/50 block font-semibold">
+                    Selección Favorita
+                  </label>
                   <div className="relative">
                     <FlagIcon className="absolute left-4 top-3.5 h-4 w-4 text-white/40" />
                     <select
@@ -589,7 +635,9 @@ function ProfilePage() {
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-[10px] uppercase tracking-widest text-white/50 block font-semibold">Correo Electrónico</label>
+                  <label className="text-[10px] uppercase tracking-widest text-white/50 block font-semibold">
+                    Correo Electrónico
+                  </label>
                   <div className="relative">
                     <Mail className="absolute left-4 top-3.5 h-4 w-4 text-white/40" />
                     <input
@@ -604,7 +652,9 @@ function ProfilePage() {
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-[10px] uppercase tracking-widest text-white/50 block font-semibold">Contraseña</label>
+                  <label className="text-[10px] uppercase tracking-widest text-white/50 block font-semibold">
+                    Contraseña
+                  </label>
                   <div className="relative">
                     <Lock className="absolute left-4 top-3.5 h-4 w-4 text-white/40" />
                     <input
@@ -635,18 +685,30 @@ function ProfilePage() {
               </form>
             )}
           </div>
-          
+
           {/* Enlaces de ayuda para no logueados */}
           <div className="mt-8 mb-10 flex justify-center gap-6 text-xs text-white/40">
-            <Link to="/rules" search={{ tab: "manual" }} className="hover:text-primary transition font-semibold">
+            <Link
+              to="/rules"
+              search={{ tab: "manual" }}
+              className="hover:text-primary transition font-semibold"
+            >
               Manual de Juego
             </Link>
             <span>•</span>
-            <Link to="/rules" search={{ tab: "terms" }} className="hover:text-primary transition font-semibold">
+            <Link
+              to="/rules"
+              search={{ tab: "terms" }}
+              className="hover:text-primary transition font-semibold"
+            >
               Términos
             </Link>
             <span>•</span>
-            <Link to="/rules" search={{ tab: "privacy" }} className="hover:text-primary transition font-semibold">
+            <Link
+              to="/rules"
+              search={{ tab: "privacy" }}
+              className="hover:text-primary transition font-semibold"
+            >
               Privacidad
             </Link>
           </div>
@@ -676,7 +738,9 @@ function ProfilePage() {
             >
               <Menu className="h-4 w-4 text-white" />
             </button>
-            <span className="text-[11px] font-bold uppercase tracking-[0.25em] text-primary">Mi Identidad</span>
+            <span className="text-[11px] font-bold uppercase tracking-[0.25em] text-primary">
+              Mi Identidad
+            </span>
           </div>
           <ProfileDropdown />
         </div>
@@ -697,7 +761,11 @@ function ProfilePage() {
                   className="h-[120px] w-[120px] rounded-full object-cover ring-4 ring-primary/40 neon-glow"
                 />
               ) : (
-                <Flag code={displayProfile.country_code} size={120} className="ring-4 ring-primary/40 neon-glow" />
+                <Flag
+                  code={displayProfile.country_code}
+                  size={120}
+                  className="ring-4 ring-primary/40 neon-glow"
+                />
               )}
               {/* Overlay spinner mientras sube */}
               {uploadingAvatar && (
@@ -717,9 +785,23 @@ function ProfilePage() {
               {uploadingAvatar ? (
                 <div className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-black border-t-transparent" />
               ) : (
-                <svg className="h-4 w-4 text-black" fill="none" stroke="currentColor" strokeWidth={2.2} viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M6.827 6.175A2.31 2.31 0 0 1 5.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 0 0-1.134-.175 2.31 2.31 0 0 1-1.64-1.055l-.822-1.316a2.192 2.192 0 0 0-1.736-1.039 48.774 48.774 0 0 0-5.232 0 2.192 2.192 0 0 0-1.736 1.039l-.821 1.316Z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 12.75a4.5 4.5 0 1 1-9 0 4.5 4.5 0 0 1 9 0Z" />
+                <svg
+                  className="h-4 w-4 text-black"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth={2.2}
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M6.827 6.175A2.31 2.31 0 0 1 5.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 0 0-1.134-.175 2.31 2.31 0 0 1-1.64-1.055l-.822-1.316a2.192 2.192 0 0 0-1.736-1.039 48.774 48.774 0 0 0-5.232 0 2.192 2.192 0 0 0-1.736 1.039l-.821 1.316Z"
+                  />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M16.5 12.75a4.5 4.5 0 1 1-9 0 4.5 4.5 0 0 1 9 0Z"
+                  />
                 </svg>
               )}
             </button>
@@ -739,17 +821,21 @@ function ProfilePage() {
           <h1 className="font-display mt-5 text-4xl leading-none text-white flex items-center justify-center gap-2.5">
             {displayProfile.full_name}
             {profile?.is_admin && (
-              <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[9px] font-black uppercase tracking-widest ${
-                profile.username === "alexg3" 
-                  ? "bg-amber-500/15 border border-amber-500/30 text-amber-400" 
-                  : "bg-primary/20 border border-primary/40 text-primary"
-              }`}>
+              <span
+                className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[9px] font-black uppercase tracking-widest ${
+                  profile.username === "alexg3"
+                    ? "bg-amber-500/15 border border-amber-500/30 text-amber-400"
+                    : "bg-primary/20 border border-primary/40 text-primary"
+                }`}
+              >
                 <ShieldCheck className="h-3 w-3" />
                 {profile.username === "alexg3" ? "Super Admin" : "Admin"}
               </span>
             )}
           </h1>
-          <p className="mt-1 text-sm text-white/55">@{displayProfile.username} · Cuenta Sincronizada</p>
+          <p className="mt-1 text-sm text-white/55">
+            @{displayProfile.username} · Cuenta Sincronizada
+          </p>
 
           <div className="mt-4 flex items-center gap-3">
             <button
@@ -782,10 +868,14 @@ function ProfilePage() {
         <div className="glass rounded-3xl p-5">
           <div className="flex items-end justify-between">
             <div>
-              <div className="text-[11px] uppercase tracking-widest text-white/50">Precisión de Predicciones</div>
+              <div className="text-[11px] uppercase tracking-widest text-white/50">
+                Precisión de Predicciones
+              </div>
               <div className="font-display text-4xl text-gradient-neon">{s.accuracy}%</div>
             </div>
-            <div className="text-xs text-white/55">{s.correct} de {s.predictions} aciertos</div>
+            <div className="text-xs text-white/55">
+              {s.correct} de {s.predictions} aciertos
+            </div>
           </div>
           <div className="mt-4 h-2 overflow-hidden rounded-full bg-white/8">
             <div
@@ -807,7 +897,9 @@ function ProfilePage() {
             <Trophy className="h-6 w-6 text-black" strokeWidth={2} />
           </div>
           <div className="relative flex-1">
-            <div className="text-[10px] font-bold uppercase tracking-widest text-primary">Historial y Comparador</div>
+            <div className="text-[10px] font-bold uppercase tracking-widest text-primary">
+              Historial y Comparador
+            </div>
             <div className="font-display text-xl text-white mt-0.5">Mis Pronósticos Guardados</div>
             <div className="text-xs text-white/55 mt-0.5">
               Revisa tus predicciones y compáralas frente a los marcadores reales.
@@ -924,9 +1016,14 @@ function ProfilePage() {
                 </span>
                 <ul className="divide-y divide-white/5 bg-white/5 rounded-2xl border border-white/5 overflow-hidden">
                   {adminsList.map((adm: any) => (
-                    <li key={adm.id} className="flex items-center justify-between px-4 py-3.5 text-xs text-white">
+                    <li
+                      key={adm.id}
+                      className="flex items-center justify-between px-4 py-3.5 text-xs text-white"
+                    >
                       <div className="min-w-0">
-                        <div className="font-semibold truncate">{adm.full_name || "Sin nombre"}</div>
+                        <div className="font-semibold truncate">
+                          {adm.full_name || "Sin nombre"}
+                        </div>
                         <div className="text-[10px] text-white/55">@{adm.username}</div>
                       </div>
                       {adm.username !== profile?.username && (
@@ -951,11 +1048,15 @@ function ProfilePage() {
         <div className="glass rounded-3xl p-5 relative overflow-hidden">
           <div className="absolute inset-0 -z-10 bg-gradient-to-br from-primary/5 via-transparent to-transparent" />
           <h3 className="font-display text-2xl text-white mb-1">Seguridad</h3>
-          <p className="text-xs text-white/50 mb-4">Actualiza tu contraseña para mantener tu cuenta segura.</p>
-          
+          <p className="text-xs text-white/50 mb-4">
+            Actualiza tu contraseña para mantener tu cuenta segura.
+          </p>
+
           <form onSubmit={handleChangePassword} className="space-y-3">
             <div className="space-y-1.5">
-              <label className="text-[10px] uppercase tracking-widest text-white/50 block font-semibold">Nueva Contraseña</label>
+              <label className="text-[10px] uppercase tracking-widest text-white/50 block font-semibold">
+                Nueva Contraseña
+              </label>
               <div className="relative">
                 <Lock className="absolute left-4 top-3.5 h-4 w-4 text-white/40" />
                 <input
@@ -993,14 +1094,16 @@ function ProfilePage() {
           <div className="glass-strong w-full max-w-md overflow-hidden rounded-3xl p-6 relative border border-white/10 shadow-2xl">
             <h3 className="font-display text-2xl text-white mb-1">Editar Perfil</h3>
             <p className="text-xs text-white/50 mb-5">
-              {profile?.country_code 
-                ? "Actualiza tu nombre o usuario. La selección favorita ya no se puede cambiar." 
+              {profile?.country_code
+                ? "Actualiza tu nombre o usuario. La selección favorita ya no se puede cambiar."
                 : "Actualiza tu nombre, usuario o selección favorita."}
             </p>
 
             <form onSubmit={handleSaveProfile} className="space-y-4">
               <div className="space-y-1.5">
-                <label className="text-[10px] uppercase tracking-widest text-white/50 block font-semibold">Nombre Completo</label>
+                <label className="text-[10px] uppercase tracking-widest text-white/50 block font-semibold">
+                  Nombre Completo
+                </label>
                 <div className="relative">
                   <UserIcon className="absolute left-4 top-3.5 h-4 w-4 text-white/40" />
                   <input
@@ -1015,7 +1118,9 @@ function ProfilePage() {
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-[10px] uppercase tracking-widest text-white/50 block font-semibold">Nombre de Usuario</label>
+                <label className="text-[10px] uppercase tracking-widest text-white/50 block font-semibold">
+                  Nombre de Usuario
+                </label>
                 <div className="relative">
                   <span className="absolute left-4 top-3 text-sm text-white/40">@</span>
                   <input
@@ -1030,7 +1135,9 @@ function ProfilePage() {
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-[10px] uppercase tracking-widest text-white/50 block font-semibold">Selección Favorita</label>
+                <label className="text-[10px] uppercase tracking-widest text-white/50 block font-semibold">
+                  Selección Favorita
+                </label>
                 <div className="relative">
                   <FlagIcon className="absolute left-4 top-3.5 h-4 w-4 text-white/40" />
                   <select
@@ -1075,12 +1182,24 @@ function ProfilePage() {
   );
 }
 
-function Stat({ label, value, accent }: { label: string; value: string | number; accent?: "neon" | "gold" }) {
+function Stat({
+  label,
+  value,
+  accent,
+}: {
+  label: string;
+  value: string | number;
+  accent?: "neon" | "gold";
+}) {
   return (
     <div className="glass rounded-2xl p-3 text-center">
       <div
         className={`font-display text-2xl ${
-          accent === "neon" ? "text-gradient-neon" : accent === "gold" ? "text-gradient-gold" : "text-white"
+          accent === "neon"
+            ? "text-gradient-neon"
+            : accent === "gold"
+              ? "text-gradient-gold"
+              : "text-white"
         }`}
       >
         {value}

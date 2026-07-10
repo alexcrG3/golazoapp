@@ -4,62 +4,62 @@ import type { Match, MatchStatus, Stage } from "@/data/matches";
 
 // ESPN display name → local team code
 const espnNameToCode: Record<string, string> = {
-  "mexico": "mx",
+  mexico: "mx",
   "south africa": "za",
   "south korea": "kr",
-  "czechia": "cz",
+  czechia: "cz",
   "czech republic": "cz",
-  "canada": "ca",
+  canada: "ca",
   "bosnia-herzegovina": "ba",
   "bosnia and herzegovina": "ba",
-  "qatar": "qa",
-  "switzerland": "ch",
-  "brazil": "br",
-  "morocco": "ma",
-  "haiti": "ht",
-  "scotland": "gb-sct",
+  qatar: "qa",
+  switzerland: "ch",
+  brazil: "br",
+  morocco: "ma",
+  haiti: "ht",
+  scotland: "gb-sct",
   "united states": "us",
-  "usa": "us",
-  "paraguay": "py",
-  "australia": "au",
-  "türkiye": "tr",
-  "turkey": "tr",
-  "germany": "de",
-  "curaçao": "cw",
-  "curacao": "cw",
+  usa: "us",
+  paraguay: "py",
+  australia: "au",
+  türkiye: "tr",
+  turkey: "tr",
+  germany: "de",
+  curaçao: "cw",
+  curacao: "cw",
   "ivory coast": "ci",
   "côte d'ivoire": "ci",
-  "ecuador": "ec",
-  "netherlands": "nl",
-  "japan": "jp",
-  "sweden": "se",
-  "tunisia": "tn",
-  "belgium": "be",
-  "egypt": "eg",
-  "iran": "ir",
+  ecuador: "ec",
+  netherlands: "nl",
+  japan: "jp",
+  sweden: "se",
+  tunisia: "tn",
+  belgium: "be",
+  egypt: "eg",
+  iran: "ir",
   "new zealand": "nz",
-  "spain": "es",
+  spain: "es",
   "cape verde": "cv",
   "saudi arabia": "sa",
-  "uruguay": "uy",
-  "france": "fr",
-  "senegal": "sn",
-  "iraq": "iq",
-  "norway": "no",
-  "argentina": "ar",
-  "algeria": "dz",
-  "austria": "at",
-  "jordan": "jo",
-  "portugal": "pt",
+  uruguay: "uy",
+  france: "fr",
+  senegal: "sn",
+  iraq: "iq",
+  norway: "no",
+  argentina: "ar",
+  algeria: "dz",
+  austria: "at",
+  jordan: "jo",
+  portugal: "pt",
   "congo dr": "cd",
   "dr congo": "cd",
-  "congo": "cd",
-  "uzbekistan": "uz",
-  "colombia": "co",
-  "england": "gb-eng",
-  "croatia": "hr",
-  "ghana": "gh",
-  "panama": "pa",
+  congo: "cd",
+  uzbekistan: "uz",
+  colombia: "co",
+  england: "gb-eng",
+  croatia: "hr",
+  ghana: "gh",
+  panama: "pa",
 };
 
 export function getTeamByEspnName(name: string): Team {
@@ -130,8 +130,8 @@ export async function fetchRealGroupsAndMatches(): Promise<{ groups: Group[]; ma
     const comp = ev.competitions?.[0];
     if (!comp) continue;
 
-    const note: string = comp.altGameNote || "";            // "FIFA World Cup, Group A"
-    const seasonSlug: string = ev.season?.slug || "";      // "group-stage", "round-of-32" ...
+    const note: string = comp.altGameNote || ""; // "FIFA World Cup, Group A"
+    const seasonSlug: string = ev.season?.slug || ""; // "group-stage", "round-of-32" ...
 
     // Extract group letter
     const groupMatch = note.match(/Group ([A-Z])/);
@@ -163,12 +163,8 @@ export async function fetchRealGroupsAndMatches(): Promise<{ groups: Group[]; ma
     }
 
     // Scores
-    const scoreHome = completed || status === "live"
-      ? Number(homeComp?.score ?? 0)
-      : undefined;
-    const scoreAway = completed || status === "live"
-      ? Number(awayComp?.score ?? 0)
-      : undefined;
+    const scoreHome = completed || status === "live" ? Number(homeComp?.score ?? 0) : undefined;
+    const scoreAway = completed || status === "live" ? Number(awayComp?.score ?? 0) : undefined;
 
     // Venue
     const venue = comp.venue;
@@ -186,9 +182,10 @@ export async function fetchRealGroupsAndMatches(): Promise<{ groups: Group[]; ma
       id: String(ev.id),
       stage,
       group: groupLetter,
-      round: stage === "group"
-        ? `Jornada ${groupLetter || "?"}`
-        : (note.replace("FIFA World Cup, ", "") || stage),
+      round:
+        stage === "group"
+          ? `Jornada ${groupLetter || "?"}`
+          : note.replace("FIFA World Cup, ", "") || stage,
       home: homeTeam,
       away: awayTeam,
       stadium,
@@ -213,7 +210,7 @@ export async function fetchRealGroupsAndMatches(): Promise<{ groups: Group[]; ma
   // Debug
   console.log(
     "[ESPN] Grupos:",
-    result.groups.map((g) => `${g.name}(${g.teamCodes.join(",")})`).join(" | ")
+    result.groups.map((g) => `${g.name}(${g.teamCodes.join(",")})`).join(" | "),
   );
   const finished = matchesList.filter((m) => m.status === "finished");
   console.log(`[ESPN] Total: ${matchesList.length} partidos | Terminados: ${finished.length}`);

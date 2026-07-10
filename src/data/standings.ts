@@ -17,15 +17,19 @@ export type StandingRow = {
 export const computeStandings = (
   groupName: string,
   matchesList = staticMatches,
-  groupsList = staticGroups
+  groupsList = staticGroups,
 ): StandingRow[] => {
   const group = groupsList.find((g) => g.name === groupName);
   const teams = group ? group.teamCodes.map(teamByCode) : [];
   const rows = new Map<string, StandingRow>(
-    teams.map((t) => [t.code, { team: t, pj: 0, g: 0, e: 0, p: 0, gf: 0, gc: 0, dg: 0, pts: 0 }])
+    teams.map((t) => [t.code, { team: t, pj: 0, g: 0, e: 0, p: 0, gf: 0, gc: 0, dg: 0, pts: 0 }]),
   );
   const played = matchesList.filter(
-    (m) => m.group === groupName && m.status === "finished" && m.scoreHome != null && m.scoreAway != null
+    (m) =>
+      m.group === groupName &&
+      m.status === "finished" &&
+      m.scoreHome != null &&
+      m.scoreAway != null,
   );
   for (const m of played) {
     const home = rows.get(m.home.code);
@@ -54,12 +58,15 @@ export const computeStandings = (
   }
   for (const r of rows.values()) r.dg = r.gf - r.gc;
   return Array.from(rows.values()).sort(
-    (a, b) => b.pts - a.pts || b.dg - a.dg || b.gf - a.gf || a.team.name.localeCompare(b.team.name)
+    (a, b) => b.pts - a.pts || b.dg - a.dg || b.gf - a.gf || a.team.name.localeCompare(b.team.name),
   );
 };
 
 export const allStandings = (
   matchesList = staticMatches,
-  groupsList = staticGroups
+  groupsList = staticGroups,
 ): { group: string; rows: StandingRow[] }[] =>
-  groupsList.map((g) => ({ group: g.name, rows: computeStandings(g.name, matchesList, groupsList) }));
+  groupsList.map((g) => ({
+    group: g.name,
+    rows: computeStandings(g.name, matchesList, groupsList),
+  }));

@@ -57,12 +57,10 @@ export const groupsService = {
 
       if (!groupError && newGroup) {
         // Unirse automáticamente como creador
-        const { error: memberError } = await supabase
-          .from("group_members")
-          .insert({
-            group_id: newGroup.id,
-            user_id: userId,
-          });
+        const { error: memberError } = await supabase.from("group_members").insert({
+          group_id: newGroup.id,
+          user_id: userId,
+        });
 
         if (memberError) {
           // Si falla unirse, limpiar el grupo creado
@@ -97,12 +95,10 @@ export const groupsService = {
     }
 
     // Agregar al usuario como miembro
-    const { error: joinError } = await supabase
-      .from("group_members")
-      .insert({
-        group_id: group.id,
-        user_id: userId,
-      });
+    const { error: joinError } = await supabase.from("group_members").insert({
+      group_id: group.id,
+      user_id: userId,
+    });
 
     if (joinError) {
       // Código de error para restricción única (ya es miembro)
@@ -140,9 +136,7 @@ export const groupsService = {
 
     if (isAdmin) {
       // El administrador (alexg3) ve todos los grupos creados en la app
-      const { data: allGroups, error: groupsError } = await supabase
-        .from("groups")
-        .select("*");
+      const { data: allGroups, error: groupsError } = await supabase.from("groups").select("*");
       if (groupsError) throw groupsError;
       groupsList = allGroups || [];
     } else {
@@ -177,9 +171,9 @@ export const groupsService = {
 
         return {
           ...(group as Group),
-          member_count: countError ? 1 : (count || 1),
+          member_count: countError ? 1 : count || 1,
         };
-      })
+      }),
     );
 
     return results;
@@ -188,7 +182,7 @@ export const groupsService = {
   // 5. Calcular la clasificación privada de un grupo
   async getGroupLeaderboard(
     groupId: string,
-    matchesList: any[]
+    matchesList: any[],
   ): Promise<GroupMemberLeaderboardEntry[]> {
     // Obtener la fecha de creación del grupo
     const { data: groupData, error: gError } = await supabase
@@ -260,7 +254,10 @@ export const groupsService = {
         if (pred) {
           if (m.status === "finished") {
             finishedPreds++;
-            const matchPts = calculateMatchPoints(m, { home: pred.home_score, away: pred.away_score });
+            const matchPts = calculateMatchPoints(m, {
+              home: pred.home_score,
+              away: pred.away_score,
+            });
             pts += matchPts;
             if (pred.home_score === m.scoreHome && pred.away_score === m.scoreAway) {
               exact++;
@@ -285,7 +282,12 @@ export const groupsService = {
       }
 
       const finalMatch = matchesList.find((m: any) => m.stage === "final");
-      if (finalMatch && finalMatch.status === "finished" && finalMatch.scoreHome != null && finalMatch.scoreAway != null) {
+      if (
+        finalMatch &&
+        finalMatch.status === "finished" &&
+        finalMatch.scoreHome != null &&
+        finalMatch.scoreAway != null
+      ) {
         let winnerCode = "";
         if (finalMatch.scoreHome > finalMatch.scoreAway) {
           winnerCode = finalMatch.home.code;
@@ -314,7 +316,9 @@ export const groupsService = {
 
     // Ordenar clasificación: puntos desc, precisión desc, nombre asc
     return entries
-      .sort((a, b) => b.points - a.points || b.accuracy - a.accuracy || a.name.localeCompare(b.name))
+      .sort(
+        (a, b) => b.points - a.points || b.accuracy - a.accuracy || a.name.localeCompare(b.name),
+      )
       .map((entry, idx) => ({
         ...entry,
         rank: idx + 1,
@@ -332,10 +336,7 @@ export const groupsService = {
     if (membersError) throw membersError;
 
     // 2. Borrar el grupo en sí de groups
-    const { error: groupError } = await supabase
-      .from("groups")
-      .delete()
-      .eq("id", groupId);
+    const { error: groupError } = await supabase.from("groups").delete().eq("id", groupId);
 
     if (groupError) throw groupError;
   },

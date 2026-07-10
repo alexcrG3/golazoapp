@@ -7,7 +7,15 @@ import { useState, useEffect } from "react";
 // Soccer ball icon (lucide doesn't ship one consistently)
 function Ball({ className = "" }: { className?: string }) {
   return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className={className}>
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+    >
       <circle cx="12" cy="12" r="9" />
       <path d="M12 3l3 4-1.5 5h-3L9 7z" />
       <path d="M3.5 10l3.5 2 2 5-2 2.5" />
@@ -36,7 +44,10 @@ export function BottomNav() {
   const displayUser = mounted ? user : null;
   const displayProfile = mounted ? profile : null;
 
-  const profileActive = pathname.startsWith("/profile") || pathname.startsWith("/my-predictions") || pathname.startsWith("/rules");
+  const profileActive =
+    pathname.startsWith("/profile") ||
+    pathname.startsWith("/my-predictions") ||
+    pathname.startsWith("/rules");
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 bg-[#070b0e]/95 backdrop-blur-xl border-t border-white/10 px-4 pt-2 pb-[max(8px,env(safe-area-inset-bottom))]">
